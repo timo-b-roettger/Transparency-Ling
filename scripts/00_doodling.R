@@ -38,4 +38,5 @@ df_hits <- df %>%
   summarise(sum = n()) %>% 
   arrange(desc(sum))
 
-df_hits
+print(df_hits, n = 20)
+
