@@ -32,8 +32,16 @@ df2009 <- tibble(read.csv("scopus_2009.csv"))
 df2018 <- tibble(read.csv("scopus_2018.csv"))
 df2019 <- tibble(read.csv("scopus_2019.csv"))
 
+# load in journal data from scopus
+codes <- tibble(read.csv("../misc/scopus-journal-list-download/Scopus Sources October 2020-Table 1.csv"))
+code_names <- tibble(read.csv("../misc/asjc-classification-codes.csv"))
+
+
 # merge dfs
 df <- rbind(df2008,df2009,df2018,df2019)
+
+
+## Check and subset-------------------------------------------------------------
 
 # check journals
 unique(df$Source.title)
@@ -71,5 +79,52 @@ df_final <- full_join(df_pre, df_post)
 # indicate pilot vs. critical papers
 df_final$data_type <- ifelse(df_final$sample >= 251, "pilot", 
                              ifelse(df_final$sample == 0, "NA", "critical"))
+
+# get number of hits per journal
+df_final %>%
+  filter(data_type == "critical") %>% 
+  select(Source.title) %>% 
+  group_by(Source.title) %>% 
+  summarise(sum = n()) %>% 
+  arrange(desc(sum))
+
+## Merge with Scopus journal code-----------------------------------------------
+
+codes_detail <- codes %>% 
+  # select relevant cols and rename
+  select(Source.Title..Medline.sourced.journals.are.indicated.in.Green.,
+         All.Science.Journal.Classification.Codes..ASJC.
+         ) %>% 
+  rename(Source.title = 'Source.Title..Medline.sourced.journals.are.indicated.in.Green.',
+         Asjc.code = 'All.Science.Journal.Classification.Codes..ASJC.') %>% 
+  # only extract those journals that we find in our data base
+  filter(Source.title %in% unique(df_final$Source.title)) %>% 
+  # seperate multiple entries
+  separate(Asjc.code, into = c("1","2","3","4","5","6","7","8"), sep = ";") %>% 
+  # make numeric
+   mutate_at(c("1","2","3","4","5","6","7","8"), as.numeric) %>% 
+  # into long format
+  pivot_longer(cols = 2:9, names_to = "Dummy", values_to = "Code") %>% 
+  # join with code_names
+  full_join(code_names) %>% 
+  # now delete Dummy, Code and Description and make wide according to supercode
+  select(-Dummy, -Description, -Code) %>% 
+  drop_na() %>% 
+  mutate(dummy = 1) %>% 
+  distinct() %>% 
+  pivot_wider(names_from = Supergroup, values_from = dummy)
+
+# define colnames
+colnms <- colnames(codes_detail[,2:18])
+
+# summarize supergroups over journals
+colSums(codes_detail[,colnms], na.rm = TRUE)
+  
+# merge df_final with codes_detail
+df_final_codes <- df_final %>% 
+  full_join(codes_detail)
+
+# summarize supergroups over articles
+round(colSums(df_final_codes[,colnms], na.rm = TRUE) / nrow(df_final_codes), 2)
 
 
