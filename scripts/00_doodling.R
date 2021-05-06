@@ -69,15 +69,15 @@ df_pre <- df %>%
 df_post <- df %>% 
   filter(subset == "post-crisis")
 
-# randomly sample 250 papers for each subset (plus 20 for pilot)
-df_pre[sample(nrow(df_pre), 260), ]$sample  <- 1:260
-df_post[sample(nrow(df_post), 260), ]$sample  <- 1:260
+# randomly sample 500 papers for each subset
+df_pre[sample(nrow(df_pre), 500), ]$sample  <- 1:500
+df_post[sample(nrow(df_post), 500), ]$sample  <- 501:1000
 
 # merge
 df_final <- full_join(df_pre, df_post)
 
-# indicate pilot vs. critical papers
-df_final$data_type <- ifelse(df_final$sample >= 251, "pilot", 
+# indicate pilot vs. critical papers (16 from each time subset)
+df_final$data_type <- ifelse(df_final$sample %in% (485:516), "pilot", 
                              ifelse(df_final$sample == 0, "NA", "critical"))
 
 # get number of hits per journal
@@ -87,6 +87,18 @@ df_final %>%
   group_by(Source.title) %>% 
   summarise(sum = n()) %>% 
   arrange(desc(sum))
+
+# create coders
+coders <- c("TR", "CH", "LK", "MR", "KM", "JC", "EB", "AB")
+
+# sample each coder 3 times
+coders_sample <- sample(coders, 8, replace = F)
+
+# assign half to pre-crisis and post-crisis
+df_final$coder <- "none"
+df_final[df_final$data_type == "pilot" & df_final$subset == "pre-crisis",]$coder <- c(coders_sample, coders_sample)
+df_final[df_final$data_type == "pilot" & df_final$subset == "post-crisis",]$coder <- c(coders_sample, coders_sample)
+
 
 ## Merge with Scopus journal code-----------------------------------------------
 
