@@ -99,6 +99,26 @@ df_final$coder <- "none"
 df_final[df_final$data_type == "pilot" & df_final$subset == "pre-crisis",]$coder <- c(coders_sample, coders_sample)
 df_final[df_final$data_type == "pilot" & df_final$subset == "post-crisis",]$coder <- c(coders_sample, coders_sample)
 
+# extract and store
+pilot_list  <- df_final %>% 
+  filter(data_type == "pilot") %>% 
+  select(coder, Authors, Title, Year, Source.title, Volume, Issue, DOI) %>% 
+  arrange(coder)
+
+# create Article ID
+pilot_list$ID = str_replace_all(
+                paste0(str_sub(pilot_list$Authors, start = 1L, end = 2L),
+                       str_sub(pilot_list$Title, start = 1L, end = 2L),
+                       str_sub(pilot_list$Source.title, start = 1L, end = 3L)
+                       ), "[[:punct:]]", "")
+
+# double check whether unique
+length(unique(pilot_list$ID)) == length(pilot_list$ID)
+
+# write to table
+write.table(pilot_list, file = "pilot_list.txt", sep = "\t",
+            row.names = FALSE)
+
 
 ## Merge with Scopus journal code-----------------------------------------------
 
