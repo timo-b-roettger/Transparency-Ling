@@ -20,6 +20,7 @@
 # libraries
 library(rstudioapi)
 library(tidyverse)
+library(ids)
 
 # getting the path of your current open file
 current_path = rstudioapi::getActiveDocumentContext()$path 
@@ -80,6 +81,15 @@ df_final <- full_join(df_pre, df_post)
 df_final$data_type <- ifelse(df_final$sample %in% (485:516), "pilot", 
                              ifelse(df_final$sample == 0, "NA", "critical"))
 
+# create unique identifier
+df_final$ID <- ids::random_id(nrow(df_final), 4)
+
+# double check whether unique
+length(unique(df_final$ID)) == length(df_final$ID)
+
+# add column with clickable DOI
+df_final$clickable_doi <- paste0("http://doi.org/", df_final$DOI)
+
 # get number of hits per journal
 df_final %>%
   filter(data_type == "critical") %>% 
@@ -99,25 +109,28 @@ df_final$coder <- "none"
 df_final[df_final$data_type == "pilot" & df_final$subset == "pre-crisis",]$coder <- c(coders_sample, coders_sample)
 df_final[df_final$data_type == "pilot" & df_final$subset == "post-crisis",]$coder <- c(coders_sample, coders_sample)
 
-# extract and store
+
+# extract and store pilot I (all PIs checking four papers)
 pilot_list  <- df_final %>% 
   filter(data_type == "pilot") %>% 
-  select(coder, Authors, Title, Year, Source.title, Volume, Issue, DOI) %>% 
+  select(coder, ID, Authors, Title, Year, Source.title, Volume, Issue, DOI) %>% 
   arrange(coder)
 
-# create Article ID
-pilot_list$ID = str_replace_all(
-                paste0(str_sub(pilot_list$Authors, start = 1L, end = 2L),
-                       str_sub(pilot_list$Title, start = 1L, end = 2L),
-                       str_sub(pilot_list$Source.title, start = 1L, end = 3L)
-                       ), "[[:punct:]]", "")
 
-# double check whether unique
-length(unique(pilot_list$ID)) == length(pilot_list$ID)
+# extract and store prescreening pilot II 
+# (students checking whether identification of language papers can be done quickly)
+prescreening_list  <- df_final %>% 
+  filter(data_type == "critical") %>% 
+  select(ID, Authors, Title, Year, Source.title, Volume, Issue, clickable_doi) 
+
 
 # write to table
 write.table(pilot_list, file = "pilot_list.txt", sep = "\t",
             row.names = FALSE)
+
+write.table(prescreening_list, file = "prescreening_list.txt", sep = "\t",
+            row.names = FALSE)
+
 
 
 ## Merge with Scopus journal code-----------------------------------------------
