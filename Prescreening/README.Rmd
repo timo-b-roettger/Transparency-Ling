@@ -3,7 +3,7 @@ title: "Clickable PreScreening List"
 description: print list for prescreeners to click sampled items conveniently
 author: "Timo Roettger"
 date: "5/24/2021"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
