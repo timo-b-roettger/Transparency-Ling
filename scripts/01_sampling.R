@@ -7,9 +7,9 @@
 #
 ## Project:     Transparency in Linguistics
 #          
-## Description: Exploring the scopus output
+## Description: Exploring the scopus output, draw random sample
 #
-## Date edited: 2021-04-01
+## Date edited: 2021-04-07
 #
 #-------------------------------------------------------------------------------
 
@@ -53,7 +53,10 @@ df_hits <- df %>%
   summarise(sum = n()) %>% 
   arrange(desc(sum))
 
+# sanity check, see what journals have the most hits
 print(df_hits, n = 20)
+
+## Sample prescreening of 1500 articles ----------------------------------------
 
 # set random seed
 set.seed(999)
@@ -71,15 +74,11 @@ df_post <- df %>%
   filter(subset == "post-crisis")
 
 # randomly sample 500 papers for each subset
-df_pre[sample(nrow(df_pre), 500), ]$sample  <- 1:500
-df_post[sample(nrow(df_post), 500), ]$sample  <- 501:1000
+df_pre[sample(nrow(df_pre), 750), ]$sample  <- 1:750
+df_post[sample(nrow(df_post), 750), ]$sample  <- 751:1500
 
 # merge
 df_final <- full_join(df_pre, df_post)
-
-# indicate pilot vs. critical papers (16 from each time subset)
-df_final$data_type <- ifelse(df_final$sample %in% (485:516), "pilot", 
-                             ifelse(df_final$sample == 0, "NA", "critical"))
 
 # create unique identifier
 df_final$ID <- ids::random_id(nrow(df_final), 4)
@@ -90,45 +89,24 @@ length(unique(df_final$ID)) == length(df_final$ID)
 # add column with clickable DOI
 df_final$clickable_doi <- paste0("http://doi.org/", df_final$DOI)
 
-# get number of hits per journal
+# sanity check, get number of hits per journal
 df_final %>%
-  filter(data_type == "critical") %>% 
+  filter(sample != 0) %>% 
   select(Source.title) %>% 
   group_by(Source.title) %>% 
   summarise(sum = n()) %>% 
   arrange(desc(sum))
+# looks good to me
 
-# create coders
-coders <- c("TR", "CH", "LK", "MR", "KM", "JC", "EB", "AB")
-
-# sample each coder 3 times
-coders_sample <- sample(coders, 8, replace = F)
-
-# assign half to pre-crisis and post-crisis
-df_final$coder <- "none"
-df_final[df_final$data_type == "pilot" & df_final$subset == "pre-crisis",]$coder <- c(coders_sample, coders_sample)
-df_final[df_final$data_type == "pilot" & df_final$subset == "post-crisis",]$coder <- c(coders_sample, coders_sample)
-
-
-# extract and store pilot I (all PIs checking four papers)
-pilot_list  <- df_final %>% 
-  filter(data_type == "pilot") %>% 
-  select(coder, ID, Authors, Title, Year, Source.title, Volume, Issue, DOI) %>% 
-  arrange(coder)
-
-
-# extract and store prescreening pilot II 
+# extract and store prescreening list
 # (students checking whether identification of language papers can be done quickly)
 prescreening_list  <- df_final %>% 
-  filter(data_type == "critical") %>% 
+  filter(sample != 0) %>% 
   select(ID, Authors, Title, Year, Source.title, Volume, Issue, clickable_doi) 
 
 
 # write to table
-write.table(pilot_list, file = "pilot_list.txt", sep = "\t",
-            row.names = FALSE)
-
-write.table(prescreening_list, file = "prescreening_list.txt", sep = "\t",
+write.table(prescreening_list, file = "prescreening_list_2021-07-04.txt", sep = "\t",
             row.names = FALSE)
 
 

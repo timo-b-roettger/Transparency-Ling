@@ -2,7 +2,7 @@
 title: "Clickable PreScreening List"
 description: print list for prescreeners to click sampled items conveniently
 author: "Timo Roettger"
-date: "5/24/2021"
+date: "04/07/2021"
 output: github_document
 ---
 
@@ -16,7 +16,7 @@ library(tidyverse)
 
 ```{r display_list, echo = FALSE, message = FALSE, warning = FALSE}
 
-list <- read_tsv(file = "../data/prescreening_list.txt")
+list <- read_tsv(file = "../data/prescreening_list_2021-07-04.txt")
 list_sub <- list %>% 
   mutate(row_num = seq.int(nrow(list))) %>% 
   select(row_num, ID, clickable_doi, Title, Authors) 
