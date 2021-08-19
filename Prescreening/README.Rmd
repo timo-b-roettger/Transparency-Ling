@@ -9,7 +9,6 @@ output: md_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-
 ```
 
 ## R Markdown
@@ -24,3 +23,46 @@ list_sub <- list %>%
 knitr::kable(list_sub)
 
 ```
+
+Print out the list for working with others:
+
+```{r}
+list_sub$year_split <- list_sub$Year < 2015
+list_sub$year_split <- factor(list_sub$year_split, 
+                           levels = c(TRUE, FALSE),
+                           labels = c("Pre-OS", "After-OS"))
+
+write.csv(list_sub, "prescreening.csv", row.names = F)
+```
+
+## Analysis
+
+```{r}
+pilot <- read.csv("pilot_prescreening.csv")
+
+# reduce just to articles piloted 
+pilot <- subset(pilot, !is.na(count))
+
+# number piloted
+nrow(pilot)
+
+# create year variable
+pilot$year_split <- pilot$Year < 2015
+pilot$year_split <- factor(pilot$year_split, 
+                           levels = c(TRUE, FALSE),
+                           labels = c("Pre-OS", "After-OS"))
+table(pilot$year_split)
+
+# examine yes/no/na 
+# note that NA means we couldn't find a copy of the article 
+table(pilot$year_split, pilot$erin.code, useNA = "ifany")
+
+table(pilot$year_split, pilot$erin.code, useNA = "ifany")/25 * 100
+
+# examine overall
+table(pilot$erin.code, useNA = "ifany")
+
+table(pilot$erin.code, useNA = "ifany")/50 * 100
+```
+
+
