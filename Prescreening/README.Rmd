@@ -11,31 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-## R Markdown
-
-```{r display_list, echo = FALSE, message = FALSE, warning = FALSE}
-
-list <- read_tsv(file = "../data/prescreening_list_2021-07-04.txt")
-list_sub <- list %>% 
-  mutate(row_num = seq.int(nrow(list))) %>% 
-  select(row_num, ID, clickable_doi, Title, Year, Authors) 
-
-knitr::kable(list_sub)
-
-```
-
-Print out the list for working with others:
-
-```{r}
-list_sub$year_split <- list_sub$Year < 2015
-list_sub$year_split <- factor(list_sub$year_split, 
-                           levels = c(TRUE, FALSE),
-                           labels = c("Pre-OS", "After-OS"))
-
-write.csv(list_sub, "prescreening.csv", row.names = F)
-```
-
-## Analysis
+## Pilot Pre-screening
 
 ```{r}
 pilot <- read.csv("pilot_prescreening.csv")
@@ -64,5 +40,31 @@ table(pilot$erin.code, useNA = "ifany")
 
 table(pilot$erin.code, useNA = "ifany")/50 * 100
 ```
+
+## R Markdown
+
+```{r display_list, echo = FALSE, message = FALSE, warning = FALSE}
+
+list <- read_tsv(file = "../data/prescreening_list_2021-07-04.txt")
+list_sub <- list %>% 
+  mutate(row_num = seq.int(nrow(list))) %>% 
+  select(row_num, ID, clickable_doi, Title, Year, Authors) 
+
+knitr::kable(list_sub)
+
+```
+
+Print out the list for working with others:
+
+```{r}
+list_sub$year_split <- list_sub$Year < 2015
+list_sub$year_split <- factor(list_sub$year_split, 
+                           levels = c(TRUE, FALSE),
+                           labels = c("Pre-OS", "After-OS"))
+
+write.csv(list_sub, "prescreening.csv", row.names = F)
+```
+
+
 
 

@@ -1,3 +1,55 @@
+## Pilot Pre-screening
+
+    pilot <- read.csv("pilot_prescreening.csv")
+
+    # reduce just to articles piloted 
+    pilot <- subset(pilot, !is.na(count))
+
+    # number piloted
+    nrow(pilot)
+
+    ## [1] 50
+
+    # create year variable
+    pilot$year_split <- pilot$Year < 2015
+    pilot$year_split <- factor(pilot$year_split, 
+                               levels = c(TRUE, FALSE),
+                               labels = c("Pre-OS", "After-OS"))
+    table(pilot$year_split)
+
+    ## 
+    ##   Pre-OS After-OS 
+    ##       25       25
+
+    # examine yes/no/na 
+    # note that NA means we couldn't find a copy of the article 
+    table(pilot$year_split, pilot$erin.code, useNA = "ifany")
+
+    ##           
+    ##            no yes <NA>
+    ##   Pre-OS    8  17    0
+    ##   After-OS 10  10    5
+
+    table(pilot$year_split, pilot$erin.code, useNA = "ifany")/25 * 100
+
+    ##           
+    ##            no yes <NA>
+    ##   Pre-OS   32  68    0
+    ##   After-OS 40  40   20
+
+    # examine overall
+    table(pilot$erin.code, useNA = "ifany")
+
+    ## 
+    ##   no  yes <NA> 
+    ##   18   27    5
+
+    table(pilot$erin.code, useNA = "ifany")/50 * 100
+
+    ## 
+    ##   no  yes <NA> 
+    ##   36   54   10
+
 ## R Markdown
 
 <table>
@@ -12022,3 +12074,12 @@
 </tr>
 </tbody>
 </table>
+
+Print out the list for working with others:
+
+    list_sub$year_split <- list_sub$Year < 2015
+    list_sub$year_split <- factor(list_sub$year_split, 
+                               levels = c(TRUE, FALSE),
+                               labels = c("Pre-OS", "After-OS"))
+
+    write.csv(list_sub, "prescreening.csv", row.names = F)
