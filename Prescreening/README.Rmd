@@ -19,7 +19,7 @@ library(tidyverse)
 list <- read_tsv(file = "../data/prescreening_list_2021-07-04.txt")
 list_sub <- list %>% 
   mutate(row_num = seq.int(nrow(list))) %>% 
-  select(row_num, ID, clickable_doi, Title, Authors) 
+  select(row_num, ID, clickable_doi, Title, Year, Authors) 
 
 knitr::kable(list_sub)
 
