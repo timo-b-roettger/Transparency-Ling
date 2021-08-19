@@ -2,7 +2,7 @@
 title: "Clickable PreScreening List"
 description: print list for prescreeners to click sampled items conveniently
 author: "Timo Roettger"
-date: "04/07/2021"
+date: "Last update: `r Sys.Date()`"
 output: github_document
 ---
 
