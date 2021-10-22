@@ -34,4 +34,4 @@ no_df %>%
     theme_simple(base_size = 16)
 ```
 
-<img src="/Users/casillas/academia/research/in_progress/Transparency-Ling/plots/prescreening/exclusions-1.png" width="100%" />
+<img src="03_prescreen_descriptives_files/figure-gfm/exclusions-1.png" width="100%" />
