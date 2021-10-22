@@ -1,0 +1,68 @@
+---
+title: "Prescreening descriptive analysis"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+# libraries
+library("tidyverse")
+library("googlesheets4")
+library("here")
+library("glue")
+library("janitor")
+
+knitr::opts_chunk$set(echo = TRUE, fig.retina=2, out.width="100%", 
+  fig.path = here("plots/prescreening/")) 
+
+# Plot theme
+theme_simple <- function(...) {
+  list(
+    theme_bw(...),
+    theme(
+      axis.title.y = element_text(size = rel(.9), hjust = 0.95),
+      axis.title.x = element_text(size = rel(.9), hjust = 0.95),
+      panel.grid.major = element_line(colour = 'grey90', size = 0.15),
+      panel.grid.minor = element_line(colour = 'grey90', size = 0.15))
+  )
+}
+
+# Set theme
+theme_set(theme_bw())
+
+```
+
+
+```{r, import-data, message=F}
+# Import full dataset
+prescreen_df <- read_csv(here("data", "cooder_prescreen_backup_2021_10_21.csv"))
+```
+
+
+
+# Article breakdown
+
+```{r, 'exclusions', fig.retina=2, out.width="100%"}
+no_df <- prescreen_df %>% 
+  filter(first_code_include == "No") %>% 
+  mutate(
+    n_no = nrow(.), 
+    vague_reason = case_when(
+    str_detect(first_code_reason, "find") ~ "Not found", 
+    str_detect(first_code_reason, 
+      "english|English|french|French|german|German") ~ "Not English", 
+    str_detect(first_code_reason, "access|Access") ~ "No access", 
+    str_detect(first_code_reason, "lit review|Lit review|review|Review") ~ "Lit review", 
+    TRUE ~ "Not Linguistic")) %>% 
+  group_by(vague_reason, n_no) %>% 
+  summarize(n = n(), .groups = "drop") %>% 
+  mutate(prop = round(n / sum(n), 2)) 
+
+no_df %>% 
+  ggplot(., aes(x = vague_reason, y = prop, fill = vague_reason, label = n)) + 
+    geom_bar(stat = "identity") + 
+    geom_label(fill = "white") + 
+    scale_fill_viridis_d(name = glue("n = {no_df$n_no}"), end = 0.9) + 
+    labs(y = "Proportion", x = NULL, 
+      title = "Vague reasons for exclusion") + 
+    theme_simple(base_size = 16)
+```

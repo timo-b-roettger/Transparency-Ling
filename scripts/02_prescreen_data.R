@@ -33,7 +33,8 @@ library("clipr")
 my_url <- "https://docs.google.com/spreadsheets/d/1leiJlZTiyhKGYOrQJedaRSQ0xsNpgGZ0lTE5PHTPfuk/edit#gid=0"
 
 # Load data intro R
-cooder_pre_s <- read_sheet(my_url)
+cooder_pre_s <- read_sheet(my_url) %>% 
+  mutate(ID = as.character(ID))
 
 # Take a look to see if it worked
 glimpse(cooder_pre_s)
