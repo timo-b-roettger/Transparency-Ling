@@ -3,10 +3,10 @@
 # Last update: 20211021
 #
 # WORKFLOW
-# - Import google doc (link: )
+# - Import google doc (link: https://docs.google.com/spreadsheets/d/1leiJlZTiyhKGYOrQJedaRSQ0xsNpgGZ0lTE5PHTPfuk/edit#gid=0)
 # - Create 'coder' column
-# - Evenly distribute coder names in list
-# - Export to github_markdown with clickable cells
+# - Evenly distribute coder names in list (120 per coder, 60 for each year_split)
+# - Export as github issue with clickable cells
 #
 # -----------------------------------------------------------------------------
 
@@ -15,11 +15,12 @@
 
 # Setup -----------------------------------------------------------------------
 
-# libs
+# libraries
 library("tidyverse")
 library("googlesheets4")
 library("here")
 library("glue")
+library("clipr")
 
 # -----------------------------------------------------------------------------
 
@@ -62,7 +63,7 @@ randomized_df <- cooder_pre_s %>%
   # Keep only relevant articles 
   filter(first_code_include == "Yes") %>% 
   # There are 309 articles in the After-OS category and 301 in the Pre-OS 
-  # category so we randomly sample 300 from each
+  # category so we randomly sample 300 from each without replacement
   group_by(year_split) %>% 
   slice_sample(n = 300) %>% 
   # Randomly assign 120 articles to each coder (60 per year_split) 
@@ -102,7 +103,8 @@ md_rows <- randomized_df %>%
     md_row = str_c(pre, ID, clickable_doi, Title, year_split, coder)
     )
 
+# Save markdown formatted df to the clipboard so it can be pasted 
+# into github issue (https://github.com/troettge/Transparency-Ling/issues/24)
 clipr::write_clip(md_rows)
-
 
 # -----------------------------------------------------------------------------
