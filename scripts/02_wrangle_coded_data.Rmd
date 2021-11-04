@@ -1,0 +1,250 @@
+---
+title: "wrangling_coded_papers"
+author: "Timo Roettger"
+date: "11/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, setup, include=FALSE}
+
+# nifty code using the pacman package
+# it checks if the packages specified below are installed, if not, they will be installed, if yes, they will be loaded
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(rstudioapi, tidyverse, broom)
+
+# set the current working directory to the one where this file is
+current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+setwd(current_working_dir)
+
+```
+
+## Load in and tidy
+```{r load_in, warning = F, message = F}
+
+# load in data
+df <- read_csv("../data/Reproducible research practices and transparency in the language sciences.csv")
+
+```
+
+```{r rename_columns, warning = F, message = F}
+
+# load in data
+colnames(df) <- c(
+                  # 1. general
+                  "timestamp", "time_start", "date_start", "coder",
+                  "article_id", "issues", 
+                  "language",
+                  # 2. article info
+                  "jif", "jif_year", "country", 
+                  "study_type", "empirical_type", 
+                  # 3. preregistration
+                  "preregged", "preregged_location", 
+                  "preregged_access", "preregged_info", 
+                  # 4. data
+                  "raw_nature", "raw_available", "raw_location", 
+                  "raw_access", "raw_meta", "processed_available", 
+                  "processed_location", "processed_access", 
+                  "processed_meta", 
+                  # 5. script
+                  "script", "script_location", "script_access",
+                  # 6. methods
+                  "method", "method_location", "method_access",
+                  # 7. replication
+                  "replication",
+                  # 8. COI
+                  "coi",
+                  # 9. time
+                  "time_end", "date_end"
+                  )
+
+```
+
+```{r remove_pilot, warning = F, message = F}
+
+# pilot was run in May, so everything after May is critical data
+df <- df[df$date_start > "2021-06-01",]
+
+# make all character to lower
+df <- as.data.frame(sapply(df, 
+                           tolower))
+  
+# make all character to factor
+df <-  as.data.frame(unclass(df), 
+                     stringsAsFactors = TRUE)
+
+```
+
+```{r rename_levels, warning = F, message = F}
+
+df$issues <- ifelse(grepl("no issues", df$issues, fixed = TRUE),
+                     "no_issue", 
+                     ifelse(grepl("not in english", df$issues, fixed = TRUE),
+                     "not_english",
+                     ifelse(grepl("not about language", df$issues, fixed = TRUE),
+                     "not_language",
+                     ifelse(grepl("access", df$issues, fixed = TRUE),
+                     "no_access", df$issues))))
+
+df$jif <- as.numeric(as.character(df$jif)) 
+df$jif_year <- as.numeric(as.character(df$jif_year)) 
+
+# double check later if jif_year != publication_year
+
+df$study_type <- ifelse(grepl("editorial", df$study_type, fixed = TRUE),
+                     "not_empirical", 
+                     ifelse(grepl("synthesis", df$study_type, fixed = TRUE),
+                     "meta_analysis",
+                     ifelse(grepl("next step", df$study_type, fixed = TRUE),
+                     "empirical", df$study_type)))
+
+# multiple options chosen for empirical type, so 1st separate
+df <- df %>% 
+  separate(empirical_type, 
+           sep = ";",
+           c("empirical_type1", "empirical_type2", "empirical_type3")) %>% 
+  # 2nd code as multiple if there are multiple
+  mutate(empirical_type = ifelse(is.na(empirical_type2), empirical_type1,
+                                 "multiple"))
+
+# now recode into simpler level names
+df$empirical_type <- ifelse(grepl("exp", df$empirical_type, fixed = TRUE),
+                     "experimental", 
+                     ifelse(grepl("corpus", df$empirical_type, fixed = TRUE),
+                     "corpus",
+                     ifelse(grepl("language description", df$empirical_type, fixed = TRUE),
+                     "field",
+                     ifelse(grepl("typological", df$empirical_type, fixed = TRUE),
+                     "typological", 
+                     ifelse(grepl("multiple", df$empirical_type, fixed = TRUE),
+                     "multiple",
+                     ifelse(grepl("observation", df$empirical_type, fixed = TRUE),
+                     "observational", df$empirical_type))))))
+
+df$preregged <- ifelse(grepl("yes, there is", df$preregged, fixed = TRUE),
+                     "yes", 
+                     ifelse(grepl("no, there is", df$preregged, fixed = TRUE),
+                     "no", df$preregged))
+
+df$preregged_location <- ifelse(grepl("osf", df$preregged_location, fixed = TRUE),
+                     "osf", 
+                     ifelse(grepl("aspredicted", df$preregged_location, fixed = TRUE),
+                     "aspredicted", 
+                     ifelse(grepl("Registered Report", df$preregged_location, fixed = TRUE),
+                     "rr", 
+                     df$preregged)))
+
+df$raw_nature <- ifelse(grepl("not applicable", df$raw_nature, fixed = TRUE),
+                     "NA", df$raw_nature)
+
+df$raw_available <- ifelse(grepl("yes, the statement", df$raw_available, fixed = TRUE),
+                    "yes",
+                    ifelse(grepl("no, raw data", df$raw_available, fixed = TRUE),
+                    "no", 
+                     df$raw_available))
+
+df$raw_location <- ifelse(grepl("upon request", df$raw_location, fixed = TRUE),
+                    "request",
+                    ifelse(grepl("personal or institutional", df$raw_location, fixed = TRUE), 
+                    "personal_page",
+                    ifelse(grepl("third-party repo", df$raw_location, fixed = TRUE), 
+                    "online_rep",
+                    ifelse(grepl("supplementary", df$raw_location, fixed = TRUE), 
+                    "supplementary",
+                    ifelse(grepl("available from a third", df$raw_location, fixed = TRUE), 
+                    "third_party",
+                    df$raw_available)))))
+
+
+df$processed_available <- ifelse(grepl("yes, the statement", df$processed_available, fixed = TRUE),
+                    "yes",
+                    ifelse(grepl("no, processed data", df$processed_available, fixed = TRUE),
+                    "no", 
+                     df$processed_available))
+
+df$processed_location <- ifelse(grepl("upon request", df$processed_location, fixed = TRUE),
+                    "request",
+                    ifelse(grepl("personal or institutional", df$processed_location, fixed = TRUE), 
+                    "personal_page",
+                    ifelse(grepl("third-party repo", df$processed_location, fixed = TRUE), 
+                    "online_rep",
+                    ifelse(grepl("supplementary", df$processed_location, fixed = TRUE), 
+                    "supplementary",
+                    ifelse(grepl("available from a third", df$processed_location, fixed = TRUE), 
+                    "third_party",
+                    df$processed_location)))))
+
+df$script <- ifelse(grepl("yes, analysis", df$script, fixed = TRUE),
+                    "yes",
+                    ifelse(grepl("no, analysis", df$script, fixed = TRUE),
+                    "no", 
+                    ifelse(grepl("authors point", df$script, fixed = TRUE),
+                    "third_party", 
+                    df$script)))
+
+df$script_location <- ifelse(grepl("upon request", df$script_location, fixed = TRUE),
+                    "request",
+                    ifelse(grepl("personal or institutional", df$script_location, fixed = TRUE), 
+                    "personal_page",
+                    ifelse(grepl("third-party repo", df$script_location, fixed = TRUE), 
+                    "online_rep",
+                    ifelse(grepl("supplementary", df$script_location, fixed = TRUE), 
+                    "supplementary",
+                    ifelse(grepl("available from a third", df$script_location, fixed = TRUE), 
+                    "third_party",
+                    df$script_location)))))
+
+df$method <- ifelse(grepl("yes, materials", df$method, fixed = TRUE),
+                    "yes",
+                    ifelse(grepl("no, materials", df$method, fixed = TRUE),
+                    "no", 
+                    ifelse(grepl("third party", df$method, fixed = TRUE),
+                    "third_party", 
+                    df$method)))
+
+
+df$method_location <- ifelse(grepl("upon request", df$method_location, fixed = TRUE),
+                    "request",
+                    ifelse(grepl("personal or institutional", df$method_location, fixed = TRUE), 
+                    "personal_page",
+                    ifelse(grepl("third-party repo", df$method_location, fixed = TRUE), 
+                    "online_rep",
+                    ifelse(grepl("supplementary", df$method_location, fixed = TRUE), 
+                    "supplementary",
+                    ifelse(grepl("available from a third", df$method_location, fixed = TRUE), 
+                    "third_party",
+                    df$method_location)))))
+
+df$replication <- ifelse(grepl("claims to report", df$replication, fixed = TRUE),
+                    "yes",
+                    ifelse(grepl("no, materials", df$replication, fixed = TRUE),
+                    "no",  
+                    df$replication))
+
+df$coi <- ifelse(grepl("there are one", df$coi, fixed = TRUE),
+                    "coi",
+                    ifelse(grepl("statement says that there is no conflict", df$coi, fixed = TRUE),
+                    "no coi", 
+                    ifelse(grepl("no, there", df$coi, fixed = TRUE),
+                    "no statement", 
+                    df$coi)))
+
+```
+
+```{r rename_columns, warning = F, message = F}
+```
+
+```{r rename_columns, warning = F, message = F}
+```
+
+```{r rename_columns, warning = F, message = F}
+```
+
+```{r rename_columns, warning = F, message = F}
+```
+
+```{r rename_columns, warning = F, message = F}
+```
