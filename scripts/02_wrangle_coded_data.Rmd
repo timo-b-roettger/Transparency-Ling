@@ -72,10 +72,6 @@ df <- df[df$date_start > "2021-06-01",]
 df <- as.data.frame(sapply(df, 
                            tolower))
   
-# make all character to factor
-df <-  as.data.frame(unclass(df), 
-                     stringsAsFactors = TRUE)
-
 ```
 
 ```{r rename_levels, warning = F, message = F}
@@ -220,7 +216,7 @@ df$method_location <- ifelse(grepl("upon request", df$method_location, fixed = T
 
 df$replication <- ifelse(grepl("claims to report", df$replication, fixed = TRUE),
                     "yes",
-                    ifelse(grepl("no, materials", df$replication, fixed = TRUE),
+                    ifelse(grepl("no clear statement", df$replication, fixed = TRUE),
                     "no",  
                     df$replication))
 
@@ -232,9 +228,16 @@ df$coi <- ifelse(grepl("there are one", df$coi, fixed = TRUE),
                     "no statement", 
                     df$coi)))
 
+# make all character to factor
+df <-  as.data.frame(unclass(df), 
+                     stringsAsFactors = TRUE)
+
+
 ```
 
-```{r rename_columns, warning = F, message = F}
+```{r sanity_check, warning = F, message = F}
+
+
 ```
 
 ```{r rename_columns, warning = F, message = F}
