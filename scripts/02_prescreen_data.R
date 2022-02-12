@@ -1,6 +1,7 @@
 # Coding for prescreening -----------------------------------------------------
 #
-# Last update: 20211021
+# Author: Joseph V. Casillas
+# Last update: 20220212
 #
 # WORKFLOW
 # - Import google doc (link: https://docs.google.com/spreadsheets/d/1leiJlZTiyhKGYOrQJedaRSQ0xsNpgGZ0lTE5PHTPfuk/edit#gid=0)
@@ -107,5 +108,73 @@ md_rows <- randomized_df %>%
 # Save markdown formatted df to the clipboard so it can be pasted 
 # into github issue (https://github.com/troettge/Transparency-Ling/issues/24)
 clipr::write_clip(md_rows)
+
+# -----------------------------------------------------------------------------
+
+
+
+
+# Redistribute unfinished articles --------------------------------------------
+
+# Vector of unfinished DOIs
+unfinished_dois <- c(
+  "2df0bfbc", "9e72d433", "da82dbe2", "d11947e0", "7c3ee583", "c1812adb", 
+  "47b9d84d", "6e7fcfb0", "eb8f30c8", "ca306313", "381dbc12", "285c0f1d", 
+  "a934b552", "4ad36a28", "5367f827", "4c17af36", "26d646f0", "50db91aa", 
+  "0b0540e6", "e5d2bdaf", "e20aae7a", "cd4622f8", "ce16f889", "0a0f51a8", 
+  "841e4719", "2e207f82", "d1df7e5e", "3c79ea11", "fdc9d6b4", "eb87300c", 
+  "96f6b2bd", "149b3172", "98e604d4", "a2127c4e", "1a481136", "3935a75c", 
+  "a5d06adb", "f1d5193c", "eeeca0ab", "1332a93f", "33f02c8f", "c6c513d7", 
+  "77e82f80", "832b3f5a", "aa0f2804", "ea8e6f5f", "c4724409", "49cde95b", 
+  "5408749b", "10012f27", "282ef69c", "f40502c8", "1219375f", "2c58c4ee", 
+  "38c5c978", "c4de8978", "2d1d51f8", "9b2649ee", "a4756719", "0f760436", 
+  "51173c44", "4d4b192f", "f48a3051", "d3ebac3a", "1eb53511", "7c7843aa", 
+  "34bd38f5", "d2c4f7a0", "8328c7d1", "4cc96897", "6ba0d34a", "8.86e+11", 
+  "c7908485", "a1d6bec3", "6a316045", "5e677635", "327d341b", "4b6296c5", 
+  "30630572", "ddf2990d", "ea632f31", "be73e73d", "04a09446", "53ecc183", 
+  "036ef9f2", "28825a50", "07641c49", "84326216", "18cf4788", "d9ea6abb", 
+  "07193b56", "94ea02fe", "8df4b9ae", "30a32d49", "327416ec", "0f6d23ca", 
+  "62eddcdc", "8ae2627d", "dc800c82")
+
+# Load prescreen df of randomized coders, filter out all coders except MR, 
+# and keep only rows in `unfinished_dois`
+# Then randomly assign 98 articles to each coder (98 / 4) 
+randomized_df <- read_csv(here("data", "randomized_prescreen_df_2021_10_21.csv")) %>% 
+  mutate(ID = as.character(ID)) %>% 
+  filter(coder == "mr", ID %in% unfinished_dois) %>% 
+  slice_sample(n = 99, replace = F) %>% 
+  mutate(
+    new_id = 1:99, # index shuffled rows
+    coder = cut(new_id, breaks = length(coder_ids) - 1, labels = c("tr", "jc", "lk", "ab"))
+    ) %>% 
+  ungroup()
+
+# Check to make sure each coder has 24/25 articles assigned
+randomized_df %>% 
+  group_by(coder) %>% 
+  summarize(n = n())
+
+# Check to make sure remaining articles match `unfinished_dois` with no 
+# repeats
+sum(randomized_df$ID %in% unfinished_dois) == length(unfinished_dois)
+setdiff(randomized_df$ID, unfinished_dois)
+
+# Get new markdown list
+new_md_rows <- randomized_df %>% 
+  select(ID, clickable_doi, Title, year_split, coder) %>% 
+  arrange(coder, desc(year_split)) %>% 
+  mutate(pre = "- [ ] ", 
+    ID = glue("{ID}, "), 
+    clickable_doi = glue("[doi]({clickable_doi}), "), 
+    title_short = str_sub(Title, 1, -1), 
+    Title = glue('"{title_short}", '), 
+    year_split = glue("{year_split}, ")) %>% 
+  transmute(
+    md_row = str_c(pre, ID, clickable_doi, Title, year_split, coder)
+    )
+
+# Save markdown formatted df to the clipboard so it can be pasted 
+# into github issue (https://github.com/troettge/Transparency-Ling/issues/24)
+clipr::write_clip(new_md_rows)
 
 # -----------------------------------------------------------------------------
