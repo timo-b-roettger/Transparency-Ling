@@ -138,7 +138,7 @@ unfinished_dois <- c(
 
 # Load prescreen df of randomized coders, filter out all coders except MR, 
 # and keep only rows in `unfinished_dois`
-# Then randomly assign 98 articles to each coder (98 / 4) 
+# Then randomly assign 98 articles to each coder (99 / 4) 
 randomized_df <- read_csv(here("data", "randomized_prescreen_df_2021_10_21.csv")) %>% 
   mutate(ID = as.character(ID)) %>% 
   filter(coder == "mr", ID %in% unfinished_dois) %>% 
@@ -175,6 +175,96 @@ new_md_rows <- randomized_df %>%
 
 # Save markdown formatted df to the clipboard so it can be pasted 
 # into github issue (https://github.com/troettge/Transparency-Ling/issues/24)
+clipr::write_clip(new_md_rows)
+
+# -----------------------------------------------------------------------------
+
+
+
+
+# Randomly assign 20% to new coder --------------------------------------------
+#
+# - Take original dataset used to assign articles
+# - By coder, filter out articles they already coded randomly select X 
+#   articles from those they have not seen
+# - Repeat for each coder
+#
+
+# Get coded articles before redistributing
+round_1 <- read_csv(here("data", "randomized_prescreen_df_2021_10_21.csv")) %>% 
+  filter(!(ID %in% unfinished_dois)) %>% 
+  select(ID, clickable_doi, Title, year_split, coder) %>% 
+  mutate(clickable_doi = glue("[doi]({clickable_doi})"))
+
+# Get redistributed articles
+round_1_5 <- read_csv(here("data", "redistributed_articles.csv"))
+
+
+# Combine DFs to get all coded articles and corresponding coders
+coded_articles <- bind_rows(round_1, round_1_5)
+
+# Details
+n_articles    <- nrow(coded_articles)
+n_4_recode    <- n_articles * .2
+n_art_x_coder <- n_4_recode / 4
+
+# For each coder, sample 30 articles without replacement from coded_articles 
+# after filtering out articles coded by that individual. 
+# Remaining articles available for next coder
+# Repeat the process 4 times
+
+# tr
+set.seed(20220314)
+round2_tr <- coded_articles %>% 
+  filter(coder != "tr") %>% 
+  sample_n(size = n_art_x_coder, replace = F) %>% 
+  rename(round1_coder = coder) %>% 
+  mutate(round2_coder = "tr")
+
+# jc
+set.seed(20220314)
+round2_jc <- coded_articles %>% 
+  filter(coder != "jc", !(ID %in% round2_tr$ID)) %>% 
+  sample_n(size = n_art_x_coder, replace = F) %>% 
+  rename(round1_coder = coder) %>% 
+  mutate(round2_coder = "jc")
+
+# lk
+set.seed(20220314)
+round2_lk <- coded_articles %>% 
+  filter(coder != "lk", !(ID %in% round2_tr$ID), !(ID %in% round2_jc$ID)) %>% 
+  sample_n(size = n_art_x_coder, replace = F) %>% 
+  rename(round1_coder = coder) %>% 
+  mutate(round2_coder = "lk")
+
+# ab
+set.seed(20220314)
+round2_ab <- coded_articles %>% 
+  filter(coder != "ab", !(ID %in% round2_tr$ID), !(ID %in% round2_jc$ID), 
+    !(ID %in% round2_lk$ID)) %>% 
+  sample_n(size = n_art_x_coder, replace = F) %>% 
+  rename(round1_coder = coder) %>% 
+  mutate(round2_coder = "ab")
+
+# Combine and save round2 df for reproducibility
+round_2 <- bind_rows(round2_tr, round2_jc, round2_lk, round2_ab) %>% 
+  write_csv(here("data", "randomized_prescreen_df_rnd2_2022_03_14.csv"))
+
+# Get new markdown list
+round2_md_rows <- round_2 %>% 
+  select(ID, clickable_doi, Title, year_split, round2_coder) %>% 
+  arrange(round2_coder, desc(year_split)) %>% 
+  mutate(pre = "- [ ] ", 
+    ID = glue("{ID}, "), 
+    title_short = str_sub(Title, 1, -1), 
+    Title = glue(', {title_short}, '), 
+    year_split = glue("{year_split}, ")) %>% 
+  transmute(
+    md_row = str_c(pre, ID, clickable_doi, Title, year_split, round2_coder)
+    )
+
+# Save markdown formatted df to the clipboard so it can be pasted 
+# into github issue (https://github.com/troettge/Transparency-Ling/issues/27)
 clipr::write_clip(new_md_rows)
 
 # -----------------------------------------------------------------------------
