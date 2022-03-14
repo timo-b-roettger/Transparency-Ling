@@ -246,9 +246,13 @@ round2_ab <- coded_articles %>%
   rename(round1_coder = coder) %>% 
   mutate(round2_coder = "ab")
 
+if(F) {
 # Combine and save round2 df for reproducibility
 round_2 <- bind_rows(round2_tr, round2_jc, round2_lk, round2_ab) %>% 
   write_csv(here("data", "randomized_prescreen_df_rnd2_2022_03_14.csv"))
+}
+
+round_2 <- read_csv(here("data", "randomized_prescreen_df_rnd2_2022_03_14.csv"))
 
 # Get new markdown list
 round2_md_rows <- round_2 %>% 
@@ -265,6 +269,6 @@ round2_md_rows <- round_2 %>%
 
 # Save markdown formatted df to the clipboard so it can be pasted 
 # into github issue (https://github.com/troettge/Transparency-Ling/issues/27)
-clipr::write_clip(new_md_rows)
+clipr::write_clip(round2_md_rows)
 
 # -----------------------------------------------------------------------------
