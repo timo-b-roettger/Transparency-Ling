@@ -18,18 +18,25 @@ For each measured variable, we will report raw numbers and percentages in each r
 ```{r}
 library(rio)
 library(dplyr)
+library(stringi)
+library(tidyr)
+library(psych)
+library(ggplot2)
 ```
 
 ## Get the Data
 
 ```{r}
 DF <- import("coded_responses.xlsx")
-names(DF)
+# names(DF)
 
-#column 35 is empty
+# column 35 is empty
 DF <- DF %>% select(-`...35`)
 
-#these names are descriptive but no fun to type
+# take out pilot testing 2021-05-21 04:12:04 and before
+DF <- DF %>% filter(Timestamp > as.POSIXct("2021-05-22"))
+
+# these names are descriptive but no fun to type
 colnames(DF) <- c("TimeStamp", "TimeStarted", "DateStarted", 
                   "Coder", "ArticleID", "ArticleIssues", "ArticleLanguage", 
                   "JIF", "StudyType", "PreReg", "PreRegWhere", "PreRegAccess", 
@@ -43,13 +50,21 @@ colnames(DF) <- c("TimeStamp", "TimeStarted", "DateStarted",
 
 # list of information from scopus
 prescreenDF <- import("../Prescreening/prescreening_round1.csv")
+
+# deal with the duplicate ID issue 
+# we didn't code this one but we did code the other one
+# as per github page 
+prescreenDF$ID[prescreenDF$Title == "Quantified epistemic logics for reasoning about knowledge in multi-agent systems"] <- "eac0c983.1"
+
+# import the OA code
+openaccessDF <- import("OA_Coding_10_2021.xlsx")
 ```
 
 The following sections are in order of our preregistered plan: https://osf.io/j2q5p
 
 ## Article Characteristics
 
-Coder instructions: To identify journal impact factors use the Thomson Reuters Journal Citation Reports (https://jcr.clarivate.com/). For the question about the country, check the institutional affiliation of the corresponding author. If there are multiple corresponding authors, choose the first. If no corresponding author is identified, choose the first. If there are multiple affiliations for the selected author, choose the first. For the questions about study design, examine the title, abstract, and if necessary the methods section, to establish the study characteristics.
+- Coder instructions: To identify journal impact factors use the Thomson Reuters Journal Citation Reports (https://jcr.clarivate.com/). For the question about the country, check the institutional affiliation of the corresponding author. If there are multiple corresponding authors, choose the first. If no corresponding author is identified, choose the first. If there are multiple affiliations for the selected author, choose the first. For the questions about study design, examine the title, abstract, and if necessary the methods section, to establish the study characteristics.
 
 ### Publication Information
 
@@ -60,34 +75,127 @@ Coder instructions: To identify journal impact factors use the Thomson Reuters J
 
 ```{r}
 # merge information about publication year, field, pre versus post 
-DF <- merge(DF, prescreenDF[ , c("ID", "Year", "year_split", "clickable_doi") ], 
-            by.x = "ArticleID", by.y = "ID", 
-            all.x = T)
+DF2 <- DF %>% left_join(
+  (prescreenDF %>% select(ID, Year, year_split, clickable_doi, first_code_include)), 
+  by = c("ArticleID" = "ID")
+)
+  
+# fix the coding issues
+A_ID_fix <- DF2 %>% filter(is.na(year_split)) %>% select(ArticleID) 
+A_ID_fix <- as.vector(A_ID_fix$ArticleID)
+A_ID_fix <- paste0("\\b", A_ID_fix, "\\b")
 
-# figure out missing to fix
-View(DF[ is.na(DF$year_split), ])
+A_ID_fixed <- c("96498326", "9586644", "86897574", "35147373", 
+                "34004670", "33442876", "53780209", "15561653", 
+                "4.16E+06", "98056778", "74a007fe", "9923056", 
+                "67395332", "5.84E+59", "98963718", "20880301",
+                "84326216", "30630572", "8.86E+11", "15561653", 
+                "239b8bc4")
+
+length(A_ID_fix) == length(A_ID_fixed)
+
+DF$ArticleID <- stri_replace_all_regex(str = DF$ArticleID,
+                             pattern = A_ID_fix, 
+                             replacement = A_ID_fixed,
+                             vectorize_all = FALSE)
+
+# now really merge once IDs are fixed
+DF <- DF %>% left_join(
+  (prescreenDF %>% select(ID, Year, year_split, clickable_doi)), 
+  by = c("ArticleID" = "ID")
+)
+
+# take out duplicates by same person
+DF <- DF %>% 
+  filter(!duplicated(ArticleID, Coder))
+
+nrow(DF)
+table(DF$Coder)
+
+# find missing ID
+#### do we have a version of the github issue I can import to find the one missing ? ####
 
 # separate out the second screener of the 20%
+DF$SecondCoder <- duplicated(DF$ArticleID)
 
+table(DF$SecondCoder)
 ```
 
 ### Language Investigated
 
 - What language does the article investigate?
   - Free text response (multiple responses possible)
-  - Additional instructions: “Multiple responses possible. If there are more than 5 languages refer to as  “cross linguistic”. If in doubt, refer to as "unclear". If article makes claim about all languages, refer to as "universal"
+  - Additional instructions: "Multiple responses possible. If there are more than 5 languages refer to as  "cross linguistic". If in doubt, refer to as "unclear". If article makes claim about all languages, refer to as "universal"
 
 ```{r}
 # lower case to normalize
 DF$ArticleLanguage <- tolower(DF$ArticleLanguage)
+# normalizing
+DF$ArticleLanguage <- gsub("$mandarin^", "chinese", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("bilingual english-mandarin", "english, chinese", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub('asl', 'american sign language', DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub('\\/', ',', DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub(' and ', ',', DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub('cross linguistic', 'cross-linguistic', DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("english as a second language", "english", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("esl", "english", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("l2 ", "", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("irish english|tyneside english", "english", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("standard greek", "greek", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("portugese", "portuguese", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("chinese-cantonese", "chinese", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("nederlandse gebarentaal", "dutch sign language", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("shetland, scottish", "", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub('"|old|\\(|\\)|subjects:|stimuli:|\\?|as a second language|shetland|middle|mandarin|european|cameroon|british|-putonghua|cypriot|fiji', '', DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("multilingual context 10\\+ languages", "cross-linguistic", DF$ArticleLanguage)
+DF$ArticleLanguage <- trimws(DF$ArticleLanguage)
 
-# do some work here based on team comments
+langDF <- DF %>% 
+  select(ArticleLanguage, year_split, ArticleID) %>% 
+  separate(ArticleLanguage, sep = ",", into = c("A", "B", "C", "D"), 
+           extra = "warn") %>% 
+  pivot_longer(cols = c(A,B,C,D)) %>% 
+  filter(!is.na(value)) %>% 
+  select(year_split, value, ArticleID) %>% 
+  rename(language = value) %>% 
+  filter(language != "")
+
+# these damned "spaces" what a dumb hack
+langDF$language <- gsub("[^[:alnum:]]", "9", langDF$language)
+langDF$language <- gsub("^9+(.+)", "\\1", langDF$language)
+langDF$language <- gsub("(.+)9+$", "\\1", langDF$language)
+langDF$language <- gsub("9", " ", langDF$language)
 
 # final language table overall
-table(DF$ArticleLanguage)
+table(langDF$language)
 
 # final language table by split
-table(DF$ArticleLanguage, DF$year_split)
+table(langDF$language, langDF$year_split)
+
+# average number of languages
+count_lang <- langDF %>% 
+  group_by(ArticleID) %>% 
+  summarize(sample_size = n()) 
+
+describe(count_lang$sample_size)
+
+lang_summary <- langDF %>% 
+  group_by(language, year_split) %>% summarise(frequency=n()) %>% 
+  ungroup() %>% 
+  arrange(desc(frequency)) %>%
+  mutate(language=factor(tools::toTitleCase(language),levels = unique(tools::toTitleCase(language)),ordered = T)) %>% 
+  filter(language %in% c("English", "Universal", "Spanish", "Chinese", "Cross Linguistic", "French", "German", "Polish")) %>% 
+  mutate(year_split = factor(year_split, levels = c("Pre-OS", "After-OS")))
+
+ggplot(lang_summary, aes(language, frequency,
+                         color = year_split, fill = year_split)) + 
+  geom_bar(stat = "identity", position = position_dodge()) + 
+  theme_classic() + 
+  ylab("Frequency") + 
+  xlab("Language") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.4)) +
+  scale_color_discrete(name = "Publication Year") + 
+  scale_fill_discrete(name = "Publication Year")
 ```
 
 ### JIF 
@@ -95,184 +203,275 @@ table(DF$ArticleLanguage, DF$year_split)
 - Journal impact factor at year of publication
   - What is the journal impact factor of the article at the time of publication?.
   - Free text response (numerical)
-  - Additional instructions: “To identify journal impact factors use the Thomson Reuters Journal Citation Reports (https://jcr.clarivate.com/). If you have no access to the website, code as "NO ACCESS", if no JIF is available for year of publication, take first available JIF after year of publication and note the year of JIF in 2.2b below. If no JIF is available at all, code as NA.”
+  - Additional instructions: "To identify journal impact factors use the Thomson Reuters Journal Citation Reports (https://jcr.clarivate.com/). If you have no access to the website, code as "NO ACCESS", if no JIF is available for year of publication, take first available JIF after year of publication and note the year of JIF in 2.2b below. If no JIF is available at all, code as NA."
 - Year of journal impact factor (if not = year of publication)
   - What is the year of journal impact factor (if not = year of publication)
   - Free text response (numerical)
 
 ```{r}
-tapply()
+# convert these to text
+# deal with NO ACCESS versus NA, maybe new column
+DF$JIF <- gsub("NA", NA, DF$JIF)
+
+jifDF <- DF %>% 
+  select(JIF, JIFYear, year_split, Year) %>% 
+  mutate(JIF_no = JIF == "NO ACCESS") 
+
+# number of no access
+
+
+
+
+
+
 ```
 
 ### Country
 
 - Which country is the corresponding author based in according to their affiliation?
   - USA / China / UK / Germany / Japan / France / Canada / Italy / India / Spain /  /Unclear /Other *
-  - Additional instructions: “For the question about the country, check the institutional affiliation of the corresponding author. If there are multiple corresponding authors, choose the first. If no corresponding author is identified, choose the first. If there are multiple affiliations for the selected author, choose the first.”
+  - Additional instructions: "For the question about the country, check the institutional affiliation of the corresponding author. If there are multiple corresponding authors, choose the first. If no corresponding author is identified, choose the first. If there are multiple affiliations for the selected author, choose the first."
 
+```{r}
+## make a map 
+table(DF$CountryAuthor)
+```
 
+### Study type/design
 
-Study type/design
-What type of study is being reported?
-Multiple choice (see Table 2 for response options).
-Additional instructions: “Mark only one oval. Examine the title, abstract, and if necessary the methods section, to establish the study characteristics.”
-Type of empirical study
-If the article reports empirical data, what type of empirical data study is being reported?
-Experimental study / 
-Corpus study / 
-Field study or language description / Survey or interview / Typological study / Multiple study type reported / Other
-Preregistration
-Definitions: “Preregistration” refers to the timestamped registration of important aspects of the study (typically hypotheses, methods, and/or analysis plan) prior to commencement of the study.
-Coder instructions: Check specific sections where these files might be located e.g., supplementary materials, appendices, author notes, methods, and results sections. Search for “*registration” or “*registered”.
-Preregistration
-Does the article state whether or not the study (or some aspect of the study) was preregistered?
-Yes – there is a preregistration/
-No – there is no preregistration/ 
-Other*
-Preregistration method
-Where does the article indicate the preregistration is located?
-Open Science Framework (osf.io) /
-AsPredicted (aspredicted.org) /
-Registered Report /
-Other*
-Preregistration accessible
-Can you access and open the preregistration?
-Yes / No / Other*
-Preregistration content
-What aspects of the study appear to be preregistered? (select all that apply)
-Hypotheses /
-Data collection /
-Analysis /
-Other*
-Data sharing
-Definitions: “data” refers to recorded information that supports the analyses reported in the article. For our purposes, we differentiate between different types of data. “Raw data” refers to the recorded information in its rawest, digital form, at the level of sampling units (e.g., participants, words, utterances, trials, etc). “Processed data” refers to a derived form of the data that has undergone changes from its raw state (e.g., extraction of acoustic parameters via Praat, aggregates of responses, etc.).
-A “data availability statement” can be as simple as a url link to a data file, or as complex as a written explanation as to why data cannot be shared. 
+- What type of study is being reported?
+  - Multiple choice (see Table 2 for response options).
+  - Additional instructions: "Mark only one oval. Examine the title, abstract, and if necessary the methods section, to establish the study characteristics."
 
-Coder instructions: Check the article for a data availability statement/link. They are often located in the “supplementary material”, “acknowledgements”, “author notes”, “methods”, or “results” sections. Search the article for the text “data availab*” (to cover "data availability" and "data available"). Search for links using “www” or “http”. 
+```{r}
+table(DF$StudyType)
+table(DF$EmpiricalStudyData)
 
+# maybe top ten options + other 
 
-Raw data type
-What is the nature of the raw data files?
-Not applicable /
-Text file /
-Audio /
-Video / 
-Images /
-Other
+library(ggplot2)
 
+ggplot(DF, aes(EmpiricalStudyData)) + 
+  geom_bar() +
+  theme_classic()
+```
 
-Raw data statement
-Does the article state whether or not raw data are available?
-Yes, the statement says that the raw data are available /
-No - raw data are not available.(GO TO SECTION 4.6) / 
-Other*
-Raw data sharing method
-How does the statement indicate that the raw data are available?
-Upon request from the authors / 
-Personal or institution website / 
-An online, third-party repository (e.g., OSF, GitHub, FigShare etc.) / 
-Supplementary materials hosted by the journal /
-Available from a third party /
-Unclear /
-Other*
-Raw data accessibility
-Can you access, download, and open the raw data files without an additional step such as a sign-up or a login?
-Yes / No / Other*
-Raw data documentation
-Are the raw data files documented, i.e., are there meta-data that state the nature and content of individual files? For text files, is there a data dictionary / ”code book” that describes the nature of individual variables?
-Yes / No / Unclear / Other*
-Processed data statement
-Does the article state whether or not processed data are available?
-Yes, the statement says that the processed data are available /
-No, processed data are not available. / 
-Other*
-Processed data sharing method
-How does the statement indicate that the processed data are available?
-Upon request from the authors / 
-Personal or institution website / 
-An online, third-party repository (e.g., OSF, GitHub, FigShare etc.) / 
-Supplementary materials hosted by the journal /
-Available from a third party /
-Unclear /
-Other*
-Processed data accessibility
-Can you access, download, and open the processed data files without an additional step such as a sign-up or a login?
-Yes / No / Other*
-Processed data documentation
-Are the processed data files documented, i.e., are there meta-data that state the nature and content of individual files? Is there a data dictionary / ”code book” that describes the nature of individual variables?
-Yes / No / Unclear / Other*
-Analysis script sharing
+### Type of empirical study
+
+- If the article reports empirical data, what type of empirical data study is being reported?
+  - Experimental study / 
+  - Corpus study / 
+  - Field study or language description / Survey or interview / Typological study /   - Multiple study type reported / Other
+
+## Preregistration
+
+- Definitions: "Preregistration" refers to the timestamped registration of important aspects of the study (typically hypotheses, methods, and/or analysis plan) prior to commencement of the study.
+- Coder instructions: Check specific sections where these files might be located e.g., supplementary materials, appendices, author notes, methods, and results sections. Search for "*registration" or "*registered".
+
+### Preregistration
+
+- Does the article state whether or not the study (or some aspect of the study) was preregistered?
+  - Yes – there is a preregistration/
+  - No – there is no preregistration/ 
+  - Other*
+
+```{r}
+table(DF$PreReg)
+table(DF$PreRegAccess)
+table(DF$PreRegWhere)
+```
+
+### Preregistration method
+
+- Where does the article indicate the preregistration is located?
+  - Open Science Framework (osf.io) /
+  - AsPredicted (aspredicted.org) /
+  - Registered Report /
+  - Other*
+
+### Preregistration accessible
+
+- Can you access and open the preregistration?
+  - Yes / No / Other*
+  - Preregistration content
+
+- What aspects of the study appear to be preregistered? (select all that apply)
+  - Hypotheses /
+  - Data collection /
+  - Analysis /
+  - Other*
+
+## Data sharing
+
+- Definitions: "data" refers to recorded information that supports the analyses reported in the article. For our purposes, we differentiate between different types of data. "Raw data" refers to the recorded information in its rawest, digital form, at the level of sampling units (e.g., participants, words, utterances, trials, etc). "Processed data" refers to a derived form of the data that has undergone changes from its raw state (e.g., extraction of acoustic parameters via Praat, aggregates of responses, etc.).
+- A "data availability statement" can be as simple as a url link to a data file, or as complex as a written explanation as to why data cannot be shared. 
+- Coder instructions: Check the article for a data availability statement/link. They are often located in the "supplementary material", "acknowledgements", "author notes", "methods", or "results" sections. Search the article for the text "data availab*" (to cover "data availability" and "data available"). Search for links using "www" or "http". 
+
+### Raw data type
+
+- What is the nature of the raw data files?
+  - Not applicable /
+  - Text file /
+  - Audio /
+  - Video / 
+  - Images /
+  - Other
+
+```{r}
+table(DF$RawData)
+```
+
+### Raw data statement
+
+- Does the article state whether or not raw data are available?
+  - Yes, the statement says that the raw data are available /
+  - No - raw data are not available.(GO TO SECTION 4.6) / 
+  - Other*
+
+### Raw data sharing method
+
+- How does the statement indicate that the raw data are available?
+  - Upon request from the authors / 
+  - Personal or institution website / 
+  - An online, third-party repository (e.g., OSF, GitHub, FigShare etc.) / 
+  - Supplementary materials hosted by the journal /
+  - Available from a third party /
+  - Unclear /
+  - Other*
+
+### Raw data accessibility
+
+- Can you access, download, and open the raw data files without an additional step such as a sign-up or a login?
+  - Yes / No / Other*
+  
+### Raw data documentation
+
+- Are the raw data files documented, i.e., are there meta-data that state the nature and content of individual files? For text files, is there a data dictionary / "code book" that describes the nature of individual variables?
+  - Yes / No / Unclear / Other*
+
+### Processed data statement
+
+- Does the article state whether or not processed data are available?
+  - Yes, the statement says that the processed data are available /
+  - No, processed data are not available. / 
+  - Other*
+
+### Processed data sharing method
+
+- How does the statement indicate that the processed data are available?
+  - Upon request from the authors / 
+  - Personal or institution website / 
+  - An online, third-party repository (e.g., OSF, GitHub, FigShare etc.) / 
+  - Supplementary materials hosted by the journal /
+  - Available from a third party /
+  - Unclear /
+  - Other*
+
+### Processed data accessibility
+
+- Can you access, download, and open the processed data files without an additional step such as a sign-up or a login?
+  - Yes / No / Other*
+
+### Processed data documentation
+
+- Are the processed data files documented, i.e., are there meta-data that state the nature and content of individual files? Is there a data dictionary / "code book" that describes the nature of individual variables?
+  - Yes / No / Unclear / Other*
+
+## Analysis script sharing
+
 Definition: "Analysis scripts" refers to specification of data preparation and analysis steps in the form of highly detailed step-by-step instructions for using point-and-click software (e.g., SPSS), analysis code (e.g., R), or syntax (e.g., from SPSS). 
+- Coder instructions: Check the article for an analysis script availability statement/link. They are often located in the "supplementary material", "acknowledgements",  "author notes", "methods", or "results" sections. Search for the text "analysis script" and "analysis code". Search for links using "www" or "http". 
 
-Coder instructions: Check the article for an analysis script availability statement/link. They are often located in the "supplementary material", "acknowledgements",  "author notes", "methods", or "results" sections. Search for the text "analysis script" and "analysis code". Search for links using “www” or “http”. 
-Analysis script availability 
-Are analysis scripts available?
-Yes, analysis scripts are freely available / 
-Authors point to a third party /
-No, analysis scripts are not available /
-Other*
-Analysis script sharing method
-How are the analysis scripts accessible?
-Upon request from the authors / 
-Personal or institution website / 
-An online, third-party repository (e.g., OSF, GitHub, FigShare etc.) / 
-Supplementary materials hosted by the journal /
-Available from a third party /
-Unclear /
-Other*
-Analysis script accessibility
-Can you access, download, and open the analysis scripts without an additional step such as a sign-up or a login?
-Yes / No / Other*
+### Analysis script availability 
 
+- Are analysis scripts available?
+  - Yes, analysis scripts are freely available / 
+  - Authors point to a third party /
+  - No, analysis scripts are not available /
+  - Other*
+  
+### Analysis script sharing method
 
-Materials / Methods sharing
-Definitions: “materials / methods” refers to any study items that would be needed to repeat the study, such as stimuli, survey instruments, and computer code/software used for data collection, presentation stimuli or running experiments (not including analysis scripts, see next section), study protocols, etc. For present purposes we do not consider supplementary data/findings (e.g., additional figures or tables) to be ‘materials’.
+- How are the analysis scripts accessible?
+  - Upon request from the authors / 
+  - Personal or institution website / 
+  - An online, third-party repository (e.g., OSF, GitHub, FigShare etc.) / 
+  - Supplementary materials hosted by the journal /
+  - Available from a third party /
+  - Unclear /
+  - Other*
 
-Coder instructions: Check the article for a materials / methods availability statement/link. They are often located in the "supplementary material", "acknowledgements",  "author notes", "methods", or "results" sections. Search for links using “www” or “http”.
-Materials availability 
-Are materials or additional information about the method available?
-Yes, materials or additional information about the method are freely available / 
-Materials or additional information available through a third party /
-No, materials or additional information about the method are not available /
-Other*
-Materials sharing method
-How are the materials or additional information about the method accessible?
-Upon request from the authors / 
-Personal or institution website / 
-An online, third-party repository (e.g., OSF, GitHub, FigShare etc.) / 
-Supplementary materials hosted by the journal /
-Available from a third party /
-Unclear /
-Other*
+### Analysis script accessibility
 
-Additional instructions: “If authors point to a third party via a reference only, mark "Available from a third party".”
-Materials accessibility
-Can you access, download, and open the materials or additional information about the method without an additional step such as a sign-up or a login?
-Yes / No / Other*
-Replication
-Definition: “replication” refers to repetition of a previous study’s methods in order to ascertain whether similar findings can be obtained with a new sample. 
-Coder instructions: Search the title and abstract for the phrase “replicat*” (to cover ‘replication’, ‘replicates’, etc). Confirm the authors are using the phrase with the definition provided above.
-Replication statement
-Does the article claim to report a replication study in abstract or title?
-The article claims to report a replication study (or studies) / 
-There is no clear statement that the article reports a replication study (or studies) / 
-Other*
-Conflict of interest
-Coder instructions: Conflicts of interest are usually reported in a specific section e.g., “Author information”, “Conflict of interest statement”, or “Acknowledgments”. Search the article for the phrases “conflict of interest” and/or “competing interest”.
-Conflict of Interest statement
-Does the article include a statement indicating whether there were any conflicts of interest?
-Yes, the statement says that there are one or more conflicts of interest /
-Yes, the statement says that there is no conflict of interest / 
-No, there is no conflict of interest statement / 
-Other*
-Open access
-Coder instructions: To establish the open access status of the article: Ensure you are not connected to a network that grants paid access to journals (e.g., a university network) or logged into a remote access system such as Shibboleth or OpenAthens. Go to https://unpaywall.org/ and add the browser extension to your browser. Restart your browser. Enter the article’s DOI URL, this should lead you to the publisher’s website. Click on the unpaywall button to the right of the screen to access an open access version of the article (if the button is green, there is an OA version, if the button is grey, there is no OA version). If the article is accessible, answer “Yes”. If the article is not accessible via the add-on, answer “No”.
-Open access status
-Is the article open access?
-Yes, is open access on the publisher's website via gold OA /
-Yes, is open access via unpaywall (somewhere else) /
-No, can only be accessed via subscription l/ 
-Other*
+- Can you access, download, and open the analysis scripts without an additional step such as a sign-up or a login?
+  - Yes / No / Other*
+
+## Materials / Methods sharing
+
+- Definitions: "materials / methods" refers to any study items that would be needed to repeat the study, such as stimuli, survey instruments, and computer code/software used for data collection, presentation stimuli or running experiments (not including analysis scripts, see next section), study protocols, etc. For present purposes we do not consider supplementary data/findings (e.g., additional figures or tables) to be ‘materials’.
+- Coder instructions: Check the article for a materials / methods availability statement/link. They are often located in the "supplementary material", "acknowledgements",  "author notes", "methods", or "results" sections. Search for links using "www" or "http".
+
+### Materials availability 
+
+- Are materials or additional information about the method available?
+  - Yes, materials or additional information about the method are freely available / 
+  - Materials or additional information available through a third party /
+  - No, materials or additional information about the method are not available /
+  - Other*
+  
+### Materials sharing method
+
+- How are the materials or additional information about the method accessible?
+  - Upon request from the authors / 
+  - Personal or institution website / 
+  - An online, third-party repository (e.g., OSF, GitHub, FigShare etc.) / 
+  - Supplementary materials hosted by the journal /
+  - Available from a third party /
+  - Unclear /
+  - Other*
+
+- Additional instructions: "If authors point to a third party via a reference only, mark "Available from a third party"."
+
+### Materials accessibility
+
+- Can you access, download, and open the materials or additional information about the method without an additional step such as a sign-up or a login?
+  - Yes / No / Other*
+
+## Replication
+
+- Definition: "replication" refers to repetition of a previous study’s methods in order to ascertain whether similar findings can be obtained with a new sample. 
+Coder instructions: Search the title and abstract for the phrase "replicat*" (to cover ‘replication’, ‘replicates’, etc). Confirm the authors are using the phrase with the definition provided above.
+
+### Replication statement
+
+- Does the article claim to report a replication study in abstract or title?
+  - The article claims to report a replication study (or studies) / 
+  - There is no clear statement that the article reports a replication study (or studies) / 
+  - Other*
+
+## Conflict of interest
+
+- Coder instructions: Conflicts of interest are usually reported in a specific section e.g., "Author information", "Conflict of interest statement", or "Acknowledgments". Search the article for the phrases "conflict of interest" and/or "competing interest".
+
+### Conflict of Interest statement
+
+- Does the article include a statement indicating whether there were any conflicts of interest?
+  - Yes, the statement says that there are one or more conflicts of interest /
+  - Yes, the statement says that there is no conflict of interest / 
+  - No, there is no conflict of interest statement / 
+  - Other*
+
+## Open access
+
+- Coder instructions: To establish the open access status of the article: Ensure you are not connected to a network that grants paid access to journals (e.g., a university network) or logged into a remote access system such as Shibboleth or OpenAthens. Go to https://unpaywall.org/ and add the browser extension to your browser. Restart your browser. Enter the article’s DOI URL, this should lead you to the publisher’s website. Click on the unpaywall button to the right of the screen to access an open access version of the article (if the button is green, there is an OA version, if the button is grey, there is no OA version). If the article is accessible, answer "Yes". If the article is not accessible via the add-on, answer "No".
+
+### Open access status
+
+- Is the article open access?
+  - Yes, is open access on the publisher's website via gold OA /
+  - Yes, is open access via unpaywall (somewhere else) /
+  - No, can only be accessed via subscription l/ 
+  - Other*
 
 
 
