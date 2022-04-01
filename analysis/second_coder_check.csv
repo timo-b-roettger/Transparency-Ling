@@ -1,0 +1,316 @@
+ArticleID,name,coder_1,coder_2,easy_screen,check
+f5dbe587,CountryAuthor,independent,Unclear,FALSE,EB
+ab568dcc,ArticleIssues,I don't have access to the full text,There are no issues,FALSE,KC
+67e155b9,ArticleLanguage,English,Unclear,FALSE,IC
+67e155b9,JIF,0.091,NO ACCESS,FALSE,CH
+6d6220da,JIF,2.656,4.18,FALSE,EB
+6d6220da,RawDataAvl,"Yes, the statement says that the raw data are available.","No, raw data are not available.  (GO TO SECTION 4.6)",FALSE,KC
+6d6220da,Materials,Materials or additional information are available through a third party,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",FALSE,IC
+6d6220da,EmpiricalStudyData,Corpus study,Experimental study,FALSE,CH
+6d6220da,JIFYear,2008.0,2014.0,FALSE,EB
+fff9fbc6,ArticleLanguage,L2 English,Universal,FALSE,KC
+fff9fbc6,JIF,0.16,NA,FALSE,IC
+fff9fbc6,Materials,Materials or additional information are available through a third party,"Materials are claimed to be available, but website no longer exists.",FALSE,CH
+fff9fbc6,MaterialsWhere,dead link,Personal or institutional website,FALSE,EB
+fff9fbc6,EmpiricalStudyData,Experimental study,Observational study,FALSE,KC
+09bff6f1,JIF,3.481,3.87,FALSE,IC
+09bff6f1,JIFYear,2008.0,3.87,FALSE,CH
+ccc62ae2,ArticleLanguage,Cameroon English,English,FALSE,EB
+ccc62ae2,JIF,0.934,NA,FALSE,KC
+ccc62ae2,EmpiricalStudyData,Survey or interview,Corpus study,FALSE,IC
+bbe3b391,ArticleLanguage,English as a second language,universal,FALSE,CH
+bbe3b391,JIF,1.105,1.18,FALSE,EB
+bbe3b391,RawData,"Text file, Audio, Survey responses",Text file,FALSE,KC
+bbe3b391,JIFYear,2010.0,2014.0,FALSE,IC
+fe59ac43,JIF,0.273,NA,FALSE,CH
+4fba2fe2,JIF,1.335,NA,FALSE,EB
+795dfcd3,ArticleIssues,Article is not about language,There are no issues,FALSE,KC
+bf1f50fa,JIF,2.929,3.46,FALSE,IC
+bf1f50fa,RawData,"Text file, Video",Video,FALSE,CH
+bf1f50fa,JIFYear,2008.0,2014.0,FALSE,EB
+4e6a7a61,JIF,0.067,NA,FALSE,KC
+4e6a7a61,RawDataAvl,"No, raw data are not available.  (GO TO SECTION 4.6)","Yes, the statement says that the raw data are available.",FALSE,IC
+4e6a7a61,CountryAuthor,Unclear,Czech Republic,FALSE,CH
+4e6a7a61,EmpiricalStudyData,Corpus study,Glottochronology,FALSE,EB
+005d3923,JIF,1.196,1.012,FALSE,KC
+005d3923,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Partial materials in the appendix,FALSE,IC
+005d3923,EmpiricalStudyData,Experimental study,Survey or interview,FALSE,CH
+005d3923,JIFYear,2009.0,2010.0,FALSE,EB
+c55bef99,JIF,1.311,NA,FALSE,KC
+c55bef99,RawData,Text file,"Text file, Audio",FALSE,IC
+c55bef99,EmpiricalStudyData,Observational study,"Corpus study, Survey or interview",FALSE,CH
+ff2483c9,ArticleIssues,I don't have access to the full text,There are no issues,FALSE,EB
+5c31bef1,JIF,0.846,NO ACCESS,FALSE,KC
+5c31bef1,AnalysisScript,"No, analysis scripts are not available. (GO TO SECTION 6)",No applicable,FALSE,IC
+5c31bef1,COI,"No, there is no conflict of interest statement","Yes, the statement says that there is no conflict of interest",FALSE,CH
+5c31bef1,EmpiricalStudyData,Corpus study,"Corpus study, Discourse analysis",FALSE,EB
+ac4ee2fb,JIF,NA,NO ACCESS,FALSE,KC
+ac4ee2fb,RawData,"Text file, Audio, Video",Text file,FALSE,IC
+ac4ee2fb,ProcessData,"No, processed data are not available. (GO TO SECTION 5)",Some background poll data available from a third party,FALSE,CH
+c86ce509,ArticleLanguage,"English, Catalan","Catalan, English",FALSE,EB
+c86ce509,JIF,0.4,NA,FALSE,KC
+c86ce509,RawData,Text file,"online corpus, possibly textfiles, but not specified",FALSE,IC
+c86ce509,RawDataAvl,"Yes, the statement says that the raw data are available.",The article does not state and the corpus is not linked,FALSE,CH
+c86ce509,RawDataWhere,Available from a third party,Unclear,FALSE,EB
+9e6b6a1a,ArticleIssues,Article is not about language,There are no issues,FALSE,KC
+68eef7a5,RawData,Audio,"Text file, Video",FALSE,IC
+68eef7a5,EmpiricalStudyData,Experimental study,observational,FALSE,CH
+68eef7a5,JIFYear,2008.0,2014.0,FALSE,EB
+d256d617,JIF,1.66,NO ACCESS,FALSE,KC
+d256d617,RawData,"Text file, Answers obtained from stimuli items","Text file, Images",FALSE,IC
+d256d617,MaterialsWhere,Stimuli of the tasks are in the appendix of the paper,In the Appendices,FALSE,CH
+18902ff9,ArticleLanguage,English,english,FALSE,EB
+18902ff9,JIF,NA,2.347,FALSE,KC
+18902ff9,RawData,Audio,"Text file, Audio",FALSE,IC
+18902ff9,RawDataWhere,Personal or institutional website,Available from a third party,FALSE,CH
+18902ff9,AnalysisScript,"No, analysis scripts are not available. (GO TO SECTION 6)",Authors point to a third party,FALSE,EB
+18902ff9,Materials,"Yes, materials or additional information about the method are freely available",Materials or additional information are available through a third party,FALSE,KC
+18902ff9,MaterialsWhere,In the actual article,Available from a third party,FALSE,IC
+18902ff9,EmpiricalStudyData,"Field study or language description, Description of archive of stuttered speech",description of an open speech corpus,FALSE,CH
+0c7f90e8,ArticleLanguage,"English, Spanish, Dutch","English, Spanish",FALSE,EB
+0c7f90e8,JIF,NA,0.16,FALSE,KC
+0c7f90e8,CountryAuthor,Netherlands,The Netherlands,FALSE,IC
+d9c7a6c3,ArticleLanguage,universal,English,FALSE,CH
+d9c7a6c3,JIF,0.823,1.297,FALSE,EB
+d9c7a6c3,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Some materials available through a third party,FALSE,KC
+d9c7a6c3,JIFYear,2009.0,2010.0,FALSE,IC
+fda28461,ArticleLanguage,"German,English","English, German",FALSE,CH
+fda28461,JIF,0.229,NA,FALSE,EB
+fda28461,RawDataAvl,"No, raw data are not available.  (GO TO SECTION 4.6)","Yes, the statement says that the raw data are available.",FALSE,KC
+bd6141be,ArticleIssues,I don't have access to the full text,There are no issues,FALSE,IC
+86897574,ArticleLanguage,"Arabic, Amazigh, French","Standard and dialectal Arabic, French, and Ama- zigh (Berber)",FALSE,CH
+86897574,JIF,NA,NO ACCESS,FALSE,EB
+86897574,EmpiricalStudyData,Multiple study types reported,"Field study or language description, Survey or interview",FALSE,KC
+4937a608,ArticleIssues,Article is not about language,There are no issues,FALSE,IC
+9f5836ec,ArticleIssues,There are no issues,Article is not about language,FALSE,CH
+a81616b9,ArticleLanguage,NA,cross linguistic,FALSE,EB
+a81616b9,JIF,1.899,1.526,FALSE,KC
+a81616b9,CountryAuthor,USA,Unclear,FALSE,IC
+a81616b9,JIFYear,2018.0,2019.0,FALSE,CH
+82e85e07,ArticleIssues,There are no issues,Article is not about language,FALSE,EB
+fb7f587c,RawDataAvl,links to different corpora provided,"Yes, the statement says that the raw data are available.",FALSE,KC
+fb7f587c,RawDataWhere,Available from a third party,Public website,FALSE,IC
+fb7f587c,RawDataAccess,No,The corpus can be accessed freely (no data files),FALSE,CH
+fb7f587c,RawDataDocument,No,NA,FALSE,EB
+0ddaefdf,ArticleLanguage,"Swahili, English",multilingualism,FALSE,KC
+578b9ded,ArticleLanguage,"Malay, English",L2 English,FALSE,IC
+578b9ded,EmpiricalStudyData,Discourse analysis,observational,FALSE,CH
+140ff9b3,ArticleIssues,Article is not about language,There are no issues,FALSE,EB
+09a75114,ArticleIssues,Article is not about language,There are no issues,FALSE,KC
+3ed5f9b7,ArticleLanguage,cross linguistic,L2 English,FALSE,IC
+3ed5f9b7,JIF,0.94,NA,FALSE,CH
+3ed5f9b7,EmpiricalStudyData,Discourse analysis,discourse analysis,FALSE,EB
+4c82f2bc,ArticleIssues,Article is not about language,There are no issues,FALSE,KC
+8c013c3c,Materials,"Yes, materials or additional information about the method are freely available",Materials or additional information are available through a third party,FALSE,IC
+bfd89fc9,JIF,1.039,1.329,FALSE,CH
+bfd89fc9,RawData,Audio,"Text file, Audio",FALSE,EB
+bfd89fc9,EmpiricalStudyData,Field study or language description,"Corpus study, conversation analysis of a few examples (n=49)",FALSE,KC
+bfd89fc9,JIFYear,2017.0,2018.0,FALSE,IC
+1bbe2aee,ArticleLanguage,cross linguistic,cross lingusitics,FALSE,CH
+1bbe2aee,JIF,0.29,NA,FALSE,EB
+1bbe2aee,RawDataAvl,"No, raw data are not available.  (GO TO SECTION 4.6)","Yes, the statement says that the raw data are available.",FALSE,KC
+d3efc028,JIF,0.327,NA,FALSE,IC
+5ff4ba27,JIF,0.91,NA,FALSE,CH
+5ff4ba27,RawDataAvl,"No, raw data are not available.  (GO TO SECTION 4.6)",Statement sats that the data will be available in the future when database is completed,FALSE,EB
+5ff4ba27,ProcessData,"No, processed data are not available. (GO TO SECTION 5)",Statement sats that the data will be available in the future when database is completed,FALSE,KC
+5ff4ba27,AnalysisScript,"No, analysis scripts are not available. (GO TO SECTION 6)",Not applicable,FALSE,IC
+5ff4ba27,EmpiricalStudyData,Typological study,Field study or language description,FALSE,CH
+5ff4ba27,JIFYear,2020.0,NA,FALSE,EB
+30e21b3b,ArticleLanguage,English,unclear,FALSE,KC
+30e21b3b,JIF,NA,2.44,FALSE,IC
+30e21b3b,COI,"Yes, the statement says that there is no conflict of interest","No, there is no conflict of interest statement",FALSE,CH
+30e21b3b,Replication,There is no clear statement that the article reports a replication study (or studies),The article claims to report a replication study (or studies),FALSE,EB
+30e21b3b,EmpiricalStudyData,observational study,Experimental study,FALSE,KC
+2bfa9134,JIF,NA,1.068,FALSE,IC
+2bfa9134,RawData,Audio,Text file,FALSE,CH
+2bfa9134,RawDataWhere,Personal or institutional website,Upon request from the authors,FALSE,EB
+2bfa9134,ProcessData,"Yes, the statement says that the processed data are available","No, processed data are not available. (GO TO SECTION 5)",FALSE,KC
+2bfa9134,EmpiricalStudyData,observational study,Corpus study,FALSE,IC
+5918a6d7,ArticleIssues,There are no issues,Its on logic so I don't consider this language (although relevant for NLP and formal semantics),FALSE,CH
+5918a6d7,ArticleLanguage,English,NA,FALSE,EB
+5918a6d7,JIF,NA,0.45,FALSE,KC
+f2e8b410,ArticleLanguage,English,NA,FALSE,IC
+f2e8b410,JIF,NA,0.579,FALSE,CH
+1d708c07,ArticleLanguage,German,english,FALSE,EB
+1d708c07,JIF,NA,3.481,FALSE,KC
+1d708c07,RawDataAvl,"Yes, the statement says that the raw data are available.","No, raw data are not available.  (GO TO SECTION 4.6)",FALSE,IC
+1d708c07,EmpiricalStudyData,"Experimental study, Corpus study","Experimental study, Corpus study, simulation",FALSE,CH
+2a8c4cf5,ArticleLanguage,"Dutch, English",English,FALSE,EB
+2a8c4cf5,JIF,1.2,NA,FALSE,KC
+2a8c4cf5,RawData,Text file,"Text file, Images",FALSE,IC
+2a8c4cf5,RawDataWhere,Available from a third party,"An online, third-party repository (e.g. OSF, GitHub, FigShare, etc.)",FALSE,CH
+2a8c4cf5,RawDataDocument,No,Yes,FALSE,EB
+2a8c4cf5,ProcessDataWhere,Available from a third party,"An online, third-party repository (e.g. OSF, GitHub, FigShare, etc.)",FALSE,KC
+2a8c4cf5,ProcessDataAccess,No,Yes,FALSE,IC
+2a8c4cf5,ProcessDataDocument,No,Yes,FALSE,CH
+2a8c4cf5,CountryAuthor,The Netherlands,Netherlands,FALSE,EB
+4f6001c2,JIF,0.838,NO ACCESS,FALSE,KC
+4f6001c2,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Some available through a third party,FALSE,IC
+4f6001c2,EmpiricalStudyData,Experimental study,"Experimental study, Intervention study",FALSE,CH
+fcec4fcc,JIF,NA,NO ACCESS,FALSE,EB
+fcec4fcc,CountryAuthor,USA,Unclear,FALSE,KC
+5e0d1073,JIF,0.3,NA,FALSE,IC
+5e0d1073,RawDataAvl,"Yes, the statement says that the raw data are available.",reference is made to a freely available corpus by name without a link,FALSE,CH
+5e0d1073,RawDataAccess,Yes,No,FALSE,EB
+5e0d1073,RawDataDocument,No,Unclear,FALSE,KC
+63eb8491,ArticleLanguage,English as a second language,English,FALSE,IC
+63eb8491,JIF,1105.0,1.18,FALSE,CH
+63eb8491,EmpiricalStudyData,"Experimental study, Corpus study",Experimental study,FALSE,EB
+63eb8491,JIFYear,2010.0,2014.0,FALSE,KC
+b192ec7e,ArticleIssues,Article is not about language,There are no issues,FALSE,IC
+58049d3a,JIF,0.543,0.76,FALSE,CH
+b4634b48,ArticleLanguage,"Enets, Nenets",Northern Samoyedic languages,FALSE,EB
+b4634b48,JIF,0.053,0.106,FALSE,KC
+b4634b48,StudyType,Empirical data (specify the study type in the next step),"No empirical data (e.g., editorials, commentaries [without reanalysis], simulations, news, reviews, theoretical).    (SKIP TO SECTION 8)",FALSE,IC
+b4634b48,CountryAuthor,Finland,Estonia,FALSE,CH
+b4634b48,JIFYear,2010.0,2011.0,FALSE,EB
+548f6c5a,ArticleLanguage,unclear,Universal,FALSE,KC
+548f6c5a,JIF,1.292,NA,FALSE,IC
+548f6c5a,CountryAuthor,Ghana,Estonia,FALSE,CH
+204d833e,RawDataAvl,"Yes, the statement says that the raw data are available.",Link to the corpus,FALSE,EB
+204d833e,RawDataWhere,Available from a third party,Link to the corpus,FALSE,KC
+204d833e,RawDataDocument,No,Unclear,FALSE,IC
+204d833e,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Not applicable,FALSE,CH
+8776f3ff,ArticleIssues,There are no issues,Article is not about language,FALSE,EB
+b0e7d5b3,ArticleIssues,Article is not about language,There are no issues,FALSE,KC
+dc9bcac8,ArticleLanguage,English,universal,FALSE,IC
+dc9bcac8,JIF,NA,3.46,FALSE,CH
+15561653,ArticleIssues,Article is not about language,There are no issues,FALSE,EB
+001719cf,ArticleLanguage,"Czech, English","English, Czech",FALSE,KC
+001719cf,JIF,NA,0.38,FALSE,IC
+001719cf,RawDataAvl,"No, raw data are not available.  (GO TO SECTION 4.6)","Yes, the statement says that the raw data are available.",FALSE,CH
+ec834df1,ArticleLanguage,"Afrikaans, English","English, Afrikaans",FALSE,EB
+ec834df1,JIF,NA,NO ACCESS,FALSE,KC
+ec834df1,RawDataAvl,"No, raw data are not available.  (GO TO SECTION 4.6)",Link to one corpus,FALSE,IC
+ec834df1,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Materials or additional information are available through a third party,FALSE,CH
+914047d6,JIF,NA,3.02,FALSE,EB
+914047d6,RawDataAvl,Online corpus,"Yes, the statement says that the raw data are available.",FALSE,KC
+914047d6,RawDataWhere,Personal or institutional website,Available from a third party,FALSE,IC
+914047d6,RawDataAccess,Corpus is available,Yes,FALSE,CH
+914047d6,Materials,Materials or additional information are available through a third party,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",FALSE,EB
+fd5b7ec5,ArticleLanguage,English,universal,FALSE,KC
+fd5b7ec5,JIF,NA,1.77,FALSE,IC
+fd5b7ec5,COI,"No, there is no conflict of interest statement","Yes, the statement says that there is no conflict of interest",FALSE,CH
+a4895415,JIF,NA,0.17,FALSE,EB
+4b363385,RawData,Text file,Audio,FALSE,KC
+4b363385,EmpiricalStudyData,Observational study,Experimental study,FALSE,IC
+ab11bec5,ArticleLanguage,"Chinese, English","English, Chinese",FALSE,CH
+ab11bec5,JIF,NA,NO ACCESS,FALSE,EB
+a584e7b1,AnalysisScript,"No, analysis scripts are not available. (GO TO SECTION 6)",Not applicable?,FALSE,KC
+a584e7b1,CountryAuthor,Malaysia,Malysia,FALSE,IC
+a584e7b1,EmpiricalStudyData,Corpus study,Discourse analysis?,FALSE,CH
+1deba029,ArticleLanguage,"Chinese, English",English,FALSE,EB
+1deba029,JIF,NA,NO ACCESS,FALSE,KC
+1deba029,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Some available in the appendix,FALSE,IC
+9555e6f3,ArticleLanguage,"English, Spanish, Chinese","English, L2-English",FALSE,CH
+9555e6f3,JIF,NA,2.701,FALSE,EB
+9555e6f3,EmpiricalStudyData,Observational study,Experimental study,FALSE,KC
+93d54a22,ArticleLanguage,"German, French","German, French, English",FALSE,IC
+93d54a22,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)","Yes, materials or additional information about the method are freely available",FALSE,CH
+93d54a22,COI,"No, there is no conflict of interest statement","Yes, the statement says that there is no conflict of interest",FALSE,EB
+93d54a22,EmpiricalStudyData,Observational study,Experimental study,FALSE,KC
+7da82b85,JIF,NA,NO ACCESS,FALSE,IC
+7da82b85,RawDataAvl,"No, raw data are not available.  (GO TO SECTION 4.6)","Corpus cited, other data not available",FALSE,CH
+7da82b85,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Some available in appendix,FALSE,EB
+7da82b85,EmpiricalStudyData,"Corpus study, Observational study","Corpus study, Survey or interview",FALSE,KC
+4d8c4194,JIF,NA,0.19,FALSE,IC
+030a348b,ArticleIssues,There are no issues,Article is not about language,FALSE,CH
+370493ca,ArticleLanguage,"Mandarin, English",L2 english,FALSE,EB
+370493ca,JIF,NA,0.643,FALSE,KC
+370493ca,RawData,"Text file, Audio",Text file,FALSE,IC
+259ca9da,JIF,NA,NO ACCESS,FALSE,CH
+259ca9da,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Some available through a third party,FALSE,EB
+259ca9da,COI,"No, there is no conflict of interest statement","Yes, the statement says that there is no conflict of interest",FALSE,KC
+259ca9da,EmpiricalStudyData,Observational study,Experimental study,FALSE,IC
+d3c6c187,JIF,NA,NO ACCESS,FALSE,CH
+d3c6c187,RawData,Text file,Audio,FALSE,EB
+d3c6c187,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Dead link to the test application,FALSE,KC
+d3c6c187,EmpiricalStudyData,Observational study,Experimental study,FALSE,IC
+ceb0e434,JIF,NA,1.4,FALSE,CH
+ceb0e434,RawData,"Text file, Video",Video,FALSE,EB
+ceb0e434,EmpiricalStudyData,Observational study,Survey or interview,FALSE,KC
+659126a2,ArticleLanguage,English,"L2 English, English",FALSE,IC
+659126a2,JIF,NA,2.701,FALSE,CH
+659126a2,CountryAuthor,USA,China,FALSE,EB
+91c8d5b5,ArticleIssues,Article is not about language,either not about language or not an empirical article,FALSE,KC
+3d3e175d,ArticleLanguage,English,Universal,FALSE,IC
+3d3e175d,JIF,NO ACCESS,NA,FALSE,CH
+3d3e175d,EmpiricalStudyData,"Experimental study, Could be also considered collection of case studies (only 6 patients, all tested on battery of tasks)",Observational study,FALSE,EB
+2a118a86,ArticleLanguage,European Portugese,Portuguese,FALSE,KC
+2a118a86,JIF,NO ACCESS,NA,FALSE,IC
+2a118a86,RawDataAvl,"No, raw data are not available.  (GO TO SECTION 4.6)","Yes, the statement says that the raw data are available.",FALSE,CH
+2a118a86,AnalysisScript,Not applicable,"No, analysis scripts are not available. (GO TO SECTION 6)",FALSE,EB
+ca78d5c0,JIF,NO ACCESS,1.66,FALSE,KC
+ca78d5c0,Replication,Article aims to replicate a previous finding and extend it (but not sure if direct replication),There is no clear statement that the article reports a replication study (or studies),FALSE,IC
+4626f7e3,ArticleLanguage,"English, Universal",English,FALSE,CH
+4626f7e3,JIF,NO ACCESS,2.973,FALSE,EB
+4626f7e3,RawData,Text file,"Text file, Images",FALSE,KC
+4626f7e3,EmpiricalStudyData,Experimental study,observational,FALSE,IC
+0a3fbaf7,ArticleLanguage,cross linguistic,"Korean, Japanese",FALSE,CH
+0a3fbaf7,JIF,NO ACCESS,NA,FALSE,EB
+902a08b1,ArticleLanguage,"English, Universal",universal,FALSE,KC
+902a08b1,JIF,NO ACCESS,2.44,FALSE,IC
+902a08b1,RawData,"Text file, Audio",Text file,FALSE,CH
+902a08b1,EmpiricalStudyData,"Experimental study, Case studies",Experimental study,FALSE,EB
+c7fc9c27,JIF,NO ACCESS,NA,FALSE,KC
+c7fc9c27,RawData,"Text file, Audio","Audio, Video",FALSE,IC
+c7fc9c27,EmpiricalStudyData,"Experimental study, Intervention study",Experimental study,FALSE,CH
+239b8bc4,ArticleLanguage,"Chinese, English","Chinese, Portuguese, English",FALSE,EB
+239b8bc4,JIF,NO ACCESS,0.03,FALSE,KC
+239b8bc4,EmpiricalStudyData,Corpus study,Typological study,FALSE,IC
+5b30f988,JIF,NO ACCESS,0.4,FALSE,CH
+a265d9b5,JIF,NO ACCESS,NA,FALSE,EB
+a265d9b5,Materials,"Some materials from a third party, some unavailable","No, materials or additional information about the method are not available. (GO TO SECTION 7)",FALSE,KC
+a265d9b5,EmpiricalStudyData,Experimental study,Observational study,FALSE,IC
+98963718,JIF,NO ACCESS,0.24,FALSE,CH
+db234c5c,JIF,NO ACCESS,NA,FALSE,EB
+db234c5c,RawData,"Audio, Video",Video,FALSE,KC
+db234c5c,EmpiricalStudyData,"Corpus study, Discourse analysis",Corpus study,FALSE,IC
+87700a27,ArticleLanguage,Universal,cross linguistic,FALSE,CH
+87700a27,JIF,NO ACCESS,NA,FALSE,EB
+4918b08b,ArticleIssues,There are no issues,Article is not about language,FALSE,KC
+8183a3b8,ArticleIssues,There are no issues,Article is not about language,FALSE,IC
+6e7fcfb0,ArticleLanguage,unclear,universal,FALSE,CH
+6e7fcfb0,JIF,0.404,NA,FALSE,EB
+6e7fcfb0,EmpiricalStudyData,Discourse analysis,"Corpus study, Observational study",FALSE,KC
+1a481136,JIF,0.147,NA,FALSE,IC
+51173c44,ArticleLanguage,polish,Polish,FALSE,CH
+51173c44,JIF,0.0,NA,FALSE,EB
+51173c44,RawDataDocument,No,"Authors say that they are, but ""minimally""",FALSE,KC
+51173c44,EmpiricalStudyData,Corpus study,"Corpus study, Observational study",FALSE,IC
+aa0f2804,ArticleLanguage,L2 English,English,FALSE,CH
+aa0f2804,CountryAuthor,Hong Kong,China,FALSE,EB
+aa0f2804,EmpiricalStudyData,observational study,Survey or interview,FALSE,KC
+38c5c978,ArticleLanguage,multilingual context (10+ languages),Languages of Belize,FALSE,IC
+38c5c978,JIF,1.433,1.292,FALSE,CH
+38c5c978,StudyType,Empirical data (specify the study type in the next step),"No empirical data (e.g., editorials, commentaries [without reanalysis], simulations, news, reviews, theoretical).    (SKIP TO SECTION 8)",FALSE,EB
+38c5c978,JIFYear,2018.0,2019.0,FALSE,KC
+34bd38f5,ArticleLanguage,English,L2 english,FALSE,IC
+34bd38f5,RawData,"Text file, Audio",Text file,FALSE,CH
+34bd38f5,Materials,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",Materials or additional information are available through a third party,FALSE,EB
+34bd38f5,EmpiricalStudyData,Observational study,observational,FALSE,KC
+8328c7d1,ArticleIssues,There are no issues,Article is not about language,FALSE,IC
+a1d6bec3,ArticleIssues,There are no issues,Article is not about language,FALSE,CH
+04a09446,ArticleLanguage,universal,Polish,FALSE,EB
+04a09446,JIF,NA,2.06,FALSE,KC
+04a09446,CountryAuthor,"USA, Poland",Poland,FALSE,IC
+69d205e9,JIF,NO ACCESS,NA,FALSE,CH
+584bac7f,ArticleLanguage,"Serbian, Universal?",Universal,FALSE,EB
+584bac7f,JIF,NO ACCESS,NA,FALSE,KC
+584bac7f,RawData,"Text file, Audio",Text file,FALSE,IC
+584bac7f,Materials,Materials or additional information are available through a third party,"No, materials or additional information about the method are not available. (GO TO SECTION 7)",FALSE,CH
+584bac7f,EmpiricalStudyData,Intervention study,Observational study,FALSE,EB
+836dc5fa,JIF,NO ACCESS,0.73,FALSE,KC
+836dc5fa,RawDataAvl,No statement but points to corpora from a third party,"No, raw data are not available.  (GO TO SECTION 4.6)",FALSE,IC
+e36ab195,JIF,NO ACCESS,1.27,FALSE,CH
+cd4622f8,ArticleLanguage,English,english,FALSE,EB
+cd4622f8,JIF,NO ACCESS,1.116,FALSE,KC
+cd4622f8,StudyType,"No empirical data (e.g., editorials, commentaries [without reanalysis], simulations, news, reviews, theoretical).    (SKIP TO SECTION 8)",Empirical data (specify the study type in the next step),FALSE,IC
+9e72d433,ArticleLanguage,Universal,english,FALSE,CH
+9e72d433,JIF,NO ACCESS,NA,FALSE,EB
+47b9d84d,JIF,NO ACCESS,0.44,FALSE,KC
+d3ebac3a,ArticleLanguage,Mandarin Chinese,Mandarin,FALSE,IC
+d3ebac3a,JIF,NO ACCESS,0.655,FALSE,CH
+d3ebac3a,RawData,"Text file, Audio",Text file,FALSE,EB
+5408749b,ArticleLanguage,English,unclear,FALSE,KC
+5408749b,JIF,NO ACCESS,0.0,FALSE,IC
