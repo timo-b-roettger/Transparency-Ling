@@ -64,6 +64,7 @@ if (window.hljs) {
 
 
 
+
 <style type="text/css">
 .main-container {
   max-width: 940px;
@@ -84,6 +85,9 @@ button.code-folding-btn:focus {
 }
 summary {
   display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
 }
 pre code {
   padding: 0;
@@ -242,7 +246,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Transparency Linguistics Analysis</h1>
 <h4 class="author">Erin M. Buchanan</h4>
-<h4 class="date">Last Knitted 2022-04-01</h4>
+<h4 class="date">Last Knitted 2022-05-01</h4>
 
 </div>
 
@@ -279,7 +283,7 @@ library(countrycode)</code></pre>
 <h2>Get the Data</h2>
 <pre class="r"><code>DF &lt;- import(&quot;coded_responses.xlsx&quot;)</code></pre>
 <pre><code>## New names:
-## * `` -&gt; ...35</code></pre>
+## • `` -&gt; `...35`</code></pre>
 <pre class="r"><code># names(DF)
 
 # column 35 is empty
@@ -312,7 +316,7 @@ prescreenDF$ID[prescreenDF$Title == &quot;Quantified epistemic logics for reason
 # import the OA code
 openaccessDF &lt;- import(&quot;OA_Coding_10_2021.xlsx&quot;) %&gt;% select(-`...9`) %&gt;% filter(!is.na(row_num))</code></pre>
 <pre><code>## New names:
-## * `` -&gt; ...9</code></pre>
+## • `` -&gt; `...9`</code></pre>
 <pre class="r"><code># import code on who was doing what to check all are done
 coder1 &lt;- import(&quot;../data/randomized_prescreen_df_2021_10_21.csv&quot;)
 coder2 &lt;- import(&quot;../data/randomized_prescreen_df_rnd2_2022_03_14.csv&quot;) </code></pre>
@@ -374,8 +378,7 @@ DF2 &lt;- DF %&gt;% left_join(
 # look for missing articles 
 DF2 %&gt;% filter(is.na(TimeStamp)) %&gt;% select(coder, ArticleID)</code></pre>
 <pre><code>##   coder ArticleID
-## 1    tr  e86871b8
-## 2    tr  0e3e42b8</code></pre>
+## 1    tr  0e3e42b8</code></pre>
 <pre class="r"><code># look at duplicates by the same person 
 dup_IDs &lt;- DF2 %&gt;% filter(duplicated(DF2 %&gt;% select(ArticleID, Coder))) %&gt;% pull(ArticleID)
 
@@ -493,6 +496,7 @@ DF &lt;- DF %&gt;% left_join(
 </div>
 <div id="round-2-coding" class="section level3">
 <h3>Round 2 Coding</h3>
+<p>Figure out what to check and export that file for the second coding check.</p>
 <pre class="r"><code>DF_Second &lt;- DF %&gt;% filter(!is.na(round2_coder)) %&gt;% 
   select(-c(TimeStamp, TimeStarted, DateStarted, OA, 
             TimeEnded, DateEnded, Year, year_split, clickable_doi, 
@@ -510,9 +514,13 @@ DF &lt;- DF %&gt;% left_join(
   filter(easy_screen == F) %&gt;% 
   mutate(check = rep(c(&quot;EB&quot;, &quot;KC&quot;, &quot;IC&quot;, &quot;CH&quot;), length.out = nrow(.)))
 
-export(DF_Second, &quot;second_coder_check.csv&quot;, row.names = F)
+export(DF_Second, &quot;second_coder_check.csv&quot;, row.names = F)</code></pre>
+<p>Import and examine the results from the second coding check.</p>
+<pre class="r"><code>DF_Second_import &lt;- import(&quot;second_coder_done.xlsx&quot;)
+DF_Second_import &lt;- DF_Second_import %&gt;% 
+  mutate(answer = as.character(answer)) %&gt;% 
+  bind_rows(import(&quot;missed_these_coded.xlsx&quot;))
 
-# temporary check of how much we match 
 DF_Second_match &lt;- DF %&gt;% filter(!is.na(round2_coder)) %&gt;% 
   select(-c(TimeStamp, TimeStarted, DateStarted, OA, 
             TimeEnded, DateEnded, Year, year_split, clickable_doi, 
@@ -525,41 +533,90 @@ DF_Second_match &lt;- DF %&gt;% filter(!is.na(round2_coder)) %&gt;%
   pivot_wider(id_cols = c(ArticleID, name), 
               names_from = coder_num, 
               values_from = value) %&gt;% 
-  mutate(easy_screen = coder_1 == coder_2)
+  mutate(easy_screen = coder_1 == coder_2) %&gt;% 
+  left_join((DF_Second_import %&gt;% select(ArticleID, answer, name)), 
+            by = c(&quot;ArticleID&quot; = &quot;ArticleID&quot;, 
+                   &quot;name&quot; = &quot;name&quot;))
 
-DF_Second_match$easy_screen[is.na(DF_Second_match$easy_screen)] &lt;- TRUE
+table(&quot;easy&quot; = DF_Second_match$easy_screen, 
+      &quot;coded&quot; = DF_Second_match$answer, 
+      useNA = &quot;ifany&quot;)</code></pre>
+<pre><code>##        coded
+## easy    FALSE TRUE Unclear &lt;NA&gt;
+##   FALSE   244   69       0    5
+##   TRUE      3    0       8  914
+##   &lt;NA&gt;    270    0     123 1727</code></pre>
+<pre class="r"><code>DF_Second_match$easy_screen[is.na(DF_Second_match$coder_1) &amp; is.na(DF_Second_match$coder_2)] &lt;- TRUE
 
-table(DF_Second_match$easy_screen, 
+table(&quot;easy&quot; = DF_Second_match$easy_screen, 
+      &quot;coded&quot; = DF_Second_match$answer, 
+      useNA = &quot;ifany&quot;)</code></pre>
+<pre><code>##        coded
+## easy    FALSE TRUE Unclear &lt;NA&gt;
+##   FALSE   244   69       0    5
+##   TRUE      3    0       8 2641
+##   &lt;NA&gt;    270    0     123    0</code></pre>
+<pre class="r"><code># I forgot to include the NA mismatches 
+# export(DF_Second_match %&gt;% filter(is.na(easy_screen)), &quot;missed_these.csv&quot;, row.names = F)
+
+# copy it over 
+DF_Second_match$final_answer &lt;- DF_Second_match$easy_screen
+table(DF_Second_match$final_answer, useNA = &quot;ifany&quot;)</code></pre>
+<pre><code>## 
+## FALSE  TRUE  &lt;NA&gt; 
+##   318  2652   393</code></pre>
+<pre class="r"><code># fix NAs in the easy_screen with answer
+DF_Second_match$final_answer[is.na(DF_Second_match$final_answer)] &lt;- DF_Second_match$answer[is.na(DF_Second_match$final_answer)]
+table(DF_Second_match$final_answer, useNA = &quot;ifany&quot;)</code></pre>
+<pre><code>## 
+##   FALSE    TRUE Unclear 
+##     588    2652     123</code></pre>
+<pre class="r"><code># fix answers that don&#39;t agree
+DF_Second_match$final_answer[(DF_Second_match$easy_screen != DF_Second_match$answer)
+                             &amp; !is.na(DF_Second_match$answer) &amp; !is.na(DF_Second_match$easy_screen)] &lt;- DF_Second_match$answer[(DF_Second_match$easy_screen != DF_Second_match$answer)
+                             &amp; !is.na(DF_Second_match$answer) &amp; !is.na(DF_Second_match$easy_screen)]
+table(DF_Second_match$final_answer, useNA = &quot;ifany&quot;)</code></pre>
+<pre><code>## 
+##   FALSE    TRUE Unclear 
+##     522    2710     131</code></pre>
+<pre class="r"><code>table(DF_Second_match$final_answer, 
       DF_Second_match$name,
-      useNA = &quot;ifany&quot;) / 120</code></pre>
-<pre><code>##        
-##         AnalysisScript AnalysisScriptAccess AnalysisScriptWhere ArticleIssues
-##   FALSE    0.041666667          0.000000000         0.000000000   0.183333333
-##   TRUE     0.958333333          1.000000000         1.000000000   0.816666667
-##        
-##         ArticleLanguage         COI CountryAuthor EmpiricalStudyData
-##   FALSE     0.425000000 0.041666667   0.100000000        0.325000000
-##   TRUE      0.575000000 0.958333333   0.900000000        0.675000000
-##        
-##                 JIF     JIFYear   Materials MaterialsAccess MaterialsWhere
-##   FALSE 0.691666667 0.108333333 0.150000000     0.000000000    0.025000000
-##   TRUE  0.308333333 0.891666667 0.850000000     1.000000000    0.975000000
-##        
-##              PreReg PreRegAccess PreRegAspects PreRegWhere ProcessData
-##   FALSE 0.000000000  0.000000000   0.000000000 0.000000000 0.025000000
-##   TRUE  1.000000000  1.000000000   1.000000000 1.000000000 0.975000000
-##        
-##         ProcessDataAccess ProcessDataDocument ProcessDataWhere     RawData
-##   FALSE       0.008333333         0.008333333      0.008333333 0.183333333
-##   TRUE        0.991666667         0.991666667      0.991666667 0.816666667
-##        
-##         RawDataAccess  RawDataAvl RawDataDocument RawDataWhere Replication
-##   FALSE   0.025000000 0.133333333     0.041666667  0.058333333 0.016666667
-##   TRUE    0.975000000 0.866666667     0.958333333  0.941666667 0.983333333
-##        
-##           StudyType
-##   FALSE 0.025000000
-##   TRUE  0.975000000</code></pre>
+      useNA = &quot;ifany&quot;) / 120 * 100</code></pre>
+<pre><code>##          
+##           AnalysisScript AnalysisScriptAccess AnalysisScriptWhere ArticleIssues
+##   FALSE        1.6666667            0.8333333           1.6666667    16.6666667
+##   TRUE        84.1666667           98.3333333          98.3333333    82.5000000
+##   Unclear     14.1666667            0.8333333           0.0000000     0.8333333
+##          
+##           ArticleLanguage         COI CountryAuthor EmpiricalStudyData
+##   FALSE        45.0000000   3.3333333    25.8333333         43.3333333
+##   TRUE         55.8333333  78.3333333    74.1666667         57.5000000
+##   Unclear       0.0000000  18.3333333     0.0000000          0.0000000
+##          
+##                   JIF     JIFYear   Materials MaterialsAccess MaterialsWhere
+##   FALSE    72.5000000  65.0000000  12.5000000      13.3333333     15.0000000
+##   TRUE     28.3333333  35.0000000  73.3333333      86.6666667     85.0000000
+##   Unclear   0.0000000   0.0000000  14.1666667       0.0000000      0.0000000
+##          
+##                PreReg PreRegAccess PreRegAspects PreRegWhere ProcessData
+##   FALSE     0.0000000    0.0000000     0.0000000   0.0000000   1.6666667
+##   TRUE     85.8333333  100.0000000   100.0000000 100.0000000  78.3333333
+##   Unclear  14.1666667    0.0000000     0.0000000   0.0000000  20.0000000
+##          
+##           ProcessDataAccess ProcessDataDocument ProcessDataWhere     RawData
+##   FALSE           3.3333333           3.3333333        2.5000000  31.6666667
+##   TRUE           96.6666667          96.6666667       97.5000000  68.3333333
+##   Unclear         0.0000000           0.0000000        0.0000000   0.0000000
+##          
+##           RawDataAccess  RawDataAvl RawDataDocument RawDataWhere Replication
+##   FALSE      13.3333333  10.8333333      15.0000000   14.1666667   1.6666667
+##   TRUE       86.6666667  76.6666667      85.0000000   85.8333333  84.1666667
+##   Unclear     0.0000000  12.5000000       0.0000000    0.0000000  14.1666667
+##          
+##             StudyType
+##   FALSE    20.8333333
+##   TRUE     79.1666667
+##   Unclear   0.0000000</code></pre>
 </div>
 <div id="number-of-articles" class="section level3">
 <h3>Number of Articles</h3>
@@ -1411,43 +1468,31 @@ describe(count_lang$sample_size)</code></pre>
 <li>Free text response (numerical)</li>
 </ul></li>
 </ul>
-<pre class="r"><code># convert these to text
-# deal with NO ACCESS versus NA, maybe new column
-DF$JIF &lt;- gsub(&quot;NA&quot;, NA, DF$JIF)
-
-jifDF &lt;- DF %&gt;% 
-  select(JIF, JIFYear, year_split, Year) %&gt;% 
-  mutate(JIF_no = JIF == &quot;NO ACCESS&quot;) 
-
-jifDF$JIFYear[ 
-  is.na(jifDF$JIFYear) &amp; jifDF$JIF != &quot;NO ACCESS&quot; &amp; !is.na(jifDF$JIF)
-  ] &lt;- jifDF$Year[
-    is.na(jifDF$JIFYear) &amp; jifDF$JIF != &quot;NO ACCESS&quot; &amp; !is.na(jifDF$JIF)
-  ]
-
-# fix this issue
-jifDF$JIF[jifDF$JIF == &quot;1105.0&quot;] &lt;- &quot;1.105&quot;
-
-# number of no access
-table(jifDF$JIF_no)</code></pre>
-<pre><code>## 
-## FALSE  TRUE 
-##   217   131</code></pre>
-<pre class="r"><code># describe jif
-describeBy(as.numeric(jifDF$JIF), group = jifDF$year_split)</code></pre>
-<pre><code>## Warning in describeBy(as.numeric(jifDF$JIF), group = jifDF$year_split): NAs
-## introduced by coercion</code></pre>
+<p><strong>Note</strong>: We had a separate group code JIF, as only a few had access to the database with these values.</p>
+<pre class="r"><code>JIF &lt;- import(&quot;JIF_update.xlsx&quot;)
+# describe jif
+describeBy(as.numeric(JIF$JIF), group = JIF$Year)</code></pre>
+<pre><code>## Warning in describeBy(as.numeric(JIF$JIF), group = JIF$Year): NAs introduced by
+## coercion</code></pre>
 <pre><code>## 
 ##  Descriptive statistics by group 
-## group: After-OS
-##    vars  n mean   sd median trimmed mad min  max range skew kurtosis   se
-## X1    1 90 1.32 1.01   1.18    1.19 0.8   0 5.75  5.75 2.04     6.33 0.11
-## ------------------------------------------------------------ 
-## group: Pre-OS
+## group: 2008
 ##    vars   n mean   sd median trimmed  mad  min  max range skew kurtosis   se
-## X1    1 127    1 0.79    0.8    0.87 0.57 0.05 3.48  3.43 1.55     1.96 0.07</code></pre>
-<pre class="r"><code>DF %&gt;% select(JIF, JIFYear, ArticleID, Source.title, Year) %&gt;% 
-  export(x = ., file = &quot;jif_update.csv&quot;, row.names = F)</code></pre>
+## X1    1 139 1.01 0.82    0.8    0.87 0.55 0.04 3.48  3.44 1.62     2.28 0.07
+## ------------------------------------------------------------ 
+## group: 2009
+##    vars   n mean   sd median trimmed  mad  min  max range skew kurtosis   se
+## X1    1 116 1.04 0.78   0.83    0.93 0.62 0.07 3.56   3.5 1.28     1.23 0.07
+## ------------------------------------------------------------ 
+## group: 2018
+##    vars   n mean   sd median trimmed  mad min  max range skew kurtosis   se
+## X1    1 101 1.42 0.81    1.5     1.4 0.68   0 3.76  3.76 0.31    -0.13 0.08
+## ------------------------------------------------------------ 
+## group: 2019
+##    vars   n mean   sd median trimmed  mad  min  max range skew kurtosis   se
+## X1    1 111 1.47 0.95   1.35    1.37 0.85 0.16 5.75  5.58 1.75     5.47 0.09</code></pre>
+<pre class="r"><code># DF %&gt;% select(JIF, JIFYear, ArticleID, Source.title, Year) %&gt;% 
+#   export(x = ., file = &quot;jif_update.csv&quot;, row.names = F)</code></pre>
 </div>
 <div id="country" class="section level3">
 <h3>Country</h3>

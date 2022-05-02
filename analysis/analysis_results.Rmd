@@ -172,6 +172,8 @@ DF <- DF %>% left_join(
 
 ### Round 2 Coding
 
+Figure out what to check and export that file for the second coding check. 
+
 ```{r}
 DF_Second <- DF %>% filter(!is.na(round2_coder)) %>% 
   select(-c(TimeStamp, TimeStarted, DateStarted, OA, 
@@ -191,8 +193,16 @@ DF_Second <- DF %>% filter(!is.na(round2_coder)) %>%
   mutate(check = rep(c("EB", "KC", "IC", "CH"), length.out = nrow(.)))
 
 export(DF_Second, "second_coder_check.csv", row.names = F)
+```
 
-# temporary check of how much we match 
+Import and examine the results from the second coding check. 
+
+```{r}
+DF_Second_import <- import("second_coder_done.xlsx")
+DF_Second_import <- DF_Second_import %>% 
+  mutate(answer = as.character(answer)) %>% 
+  bind_rows(import("missed_these_coded.xlsx"))
+
 DF_Second_match <- DF %>% filter(!is.na(round2_coder)) %>% 
   select(-c(TimeStamp, TimeStarted, DateStarted, OA, 
             TimeEnded, DateEnded, Year, year_split, clickable_doi, 
@@ -205,13 +215,41 @@ DF_Second_match <- DF %>% filter(!is.na(round2_coder)) %>%
   pivot_wider(id_cols = c(ArticleID, name), 
               names_from = coder_num, 
               values_from = value) %>% 
-  mutate(easy_screen = coder_1 == coder_2)
+  mutate(easy_screen = coder_1 == coder_2) %>% 
+  left_join((DF_Second_import %>% select(ArticleID, answer, name)), 
+            by = c("ArticleID" = "ArticleID", 
+                   "name" = "name"))
 
-DF_Second_match$easy_screen[is.na(DF_Second_match$easy_screen)] <- TRUE
+table("easy" = DF_Second_match$easy_screen, 
+      "coded" = DF_Second_match$answer, 
+      useNA = "ifany")
 
-table(DF_Second_match$easy_screen, 
+DF_Second_match$easy_screen[is.na(DF_Second_match$coder_1) & is.na(DF_Second_match$coder_2)] <- TRUE
+
+table("easy" = DF_Second_match$easy_screen, 
+      "coded" = DF_Second_match$answer, 
+      useNA = "ifany")
+
+# I forgot to include the NA mismatches 
+# export(DF_Second_match %>% filter(is.na(easy_screen)), "missed_these.csv", row.names = F)
+
+# copy it over 
+DF_Second_match$final_answer <- DF_Second_match$easy_screen
+table(DF_Second_match$final_answer, useNA = "ifany")
+
+# fix NAs in the easy_screen with answer
+DF_Second_match$final_answer[is.na(DF_Second_match$final_answer)] <- DF_Second_match$answer[is.na(DF_Second_match$final_answer)]
+table(DF_Second_match$final_answer, useNA = "ifany")
+
+# fix answers that don't agree
+DF_Second_match$final_answer[(DF_Second_match$easy_screen != DF_Second_match$answer)
+                             & !is.na(DF_Second_match$answer) & !is.na(DF_Second_match$easy_screen)] <- DF_Second_match$answer[(DF_Second_match$easy_screen != DF_Second_match$answer)
+                             & !is.na(DF_Second_match$answer) & !is.na(DF_Second_match$easy_screen)]
+table(DF_Second_match$final_answer, useNA = "ifany")
+
+table(DF_Second_match$final_answer, 
       DF_Second_match$name,
-      useNA = "ifany") / 120
+      useNA = "ifany") / 120 * 100
 ```
 
 ### Number of Articles
@@ -338,33 +376,16 @@ ggplot(lang_summary, aes(language, frequency,
 - Year of journal impact factor (if not = year of publication)
   - What is the year of journal impact factor (if not = year of publication)
   - Free text response (numerical)
+  
+**Note**: We had a separate group code JIF, as only a few had access to the database with these values. 
 
 ```{r}
-# convert these to text
-# deal with NO ACCESS versus NA, maybe new column
-DF$JIF <- gsub("NA", NA, DF$JIF)
-
-jifDF <- DF %>% 
-  select(JIF, JIFYear, year_split, Year) %>% 
-  mutate(JIF_no = JIF == "NO ACCESS") 
-
-jifDF$JIFYear[ 
-  is.na(jifDF$JIFYear) & jifDF$JIF != "NO ACCESS" & !is.na(jifDF$JIF)
-  ] <- jifDF$Year[
-    is.na(jifDF$JIFYear) & jifDF$JIF != "NO ACCESS" & !is.na(jifDF$JIF)
-  ]
-
-# fix this issue
-jifDF$JIF[jifDF$JIF == "1105.0"] <- "1.105"
-
-# number of no access
-table(jifDF$JIF_no)
-
+JIF <- import("JIF_update.xlsx")
 # describe jif
-describeBy(as.numeric(jifDF$JIF), group = jifDF$year_split)
+describeBy(as.numeric(JIF$JIF), group = JIF$Year)
 
-DF %>% select(JIF, JIFYear, ArticleID, Source.title, Year) %>% 
-  export(x = ., file = "jif_update.csv", row.names = F)
+# DF %>% select(JIF, JIFYear, ArticleID, Source.title, Year) %>% 
+#   export(x = ., file = "jif_update.csv", row.names = F)
 ```
 
 ### Country
