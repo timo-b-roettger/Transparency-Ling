@@ -187,21 +187,30 @@ DF_Second <- DF %>% filter(!is.na(round2_coder)) %>%
   pivot_wider(id_cols = c(ArticleID, name), 
               names_from = coder_num, 
               values_from = value) %>% 
-  mutate(easy_screen = coder_1 == coder_2) %>% 
-  filter(!is.na(easy_screen)) %>% 
-  filter(easy_screen == F) %>% 
-  mutate(check = rep(c("EB", "KC", "IC", "CH"), length.out = nrow(.)))
+  mutate(easy_screen = coder_1 == coder_2) 
+  
+  # original code that excluded NA values and matches #
+  # this excluded things I didn't mean to that #
+  # were potentially not matches #
+  # filter(!is.na(easy_screen)) %>% 
+  # filter(easy_screen == F) %>% 
+  # mutate(check = rep(c("EB", "KC", "IC", "CH"), length.out = nrow(.)))
 
 export(DF_Second, "second_coder_check.csv", row.names = F)
 ```
 
 Import and examine the results from the second coding check. 
 
+First, EMB noticed that she did not print out the article mismatches for review that had one NA value and one real value, which would generally be a mismatch. Given the group discussion described below and a few apparent miscodings, EMB recoded all the mismatches as described: (note that the original coding is avaliable in the excel document imported below second_coder_done.xlsx on a second sheet)
+
+- The "unclear" category was added to indicate it was unclear if it was a mismatch because the person may have skipped answering these questions if they did not think the article was about language or did not have access. Therefore, all articles with one coder NA value and one coder real text was coded as Unclear.
+- A not available and not applicable was coded as a match.
+- A partial category was added for answers that overlapped but weren't exactly the same.
+
+We also separately coded JIF because only a few members had access to the information in a specialized database. 
+
 ```{r}
 DF_Second_import <- import("second_coder_done.xlsx")
-DF_Second_import <- DF_Second_import %>% 
-  mutate(answer = as.character(answer)) %>% 
-  bind_rows(import("missed_these_coded.xlsx"))
 
 DF_Second_match <- DF %>% filter(!is.na(round2_coder)) %>% 
   select(-c(TimeStamp, TimeStarted, DateStarted, OA, 
@@ -216,41 +225,52 @@ DF_Second_match <- DF %>% filter(!is.na(round2_coder)) %>%
               names_from = coder_num, 
               values_from = value) %>% 
   mutate(easy_screen = coder_1 == coder_2) %>% 
-  left_join((DF_Second_import %>% select(ArticleID, answer, name)), 
+  left_join((DF_Second_import %>% select(ArticleID, answer, name, corrected_answer)), 
             by = c("ArticleID" = "ArticleID", 
                    "name" = "name"))
 
+# comparison table of screenings (easy is exact match)
 table("easy" = DF_Second_match$easy_screen, 
       "coded" = DF_Second_match$answer, 
       useNA = "ifany")
 
-DF_Second_match$easy_screen[is.na(DF_Second_match$coder_1) & is.na(DF_Second_match$coder_2)] <- TRUE
+# overall agreement
+table(DF_Second_match$answer, useNA = "ifany")
 
-table("easy" = DF_Second_match$easy_screen, 
-      "coded" = DF_Second_match$answer, 
-      useNA = "ifany")
-
-# I forgot to include the NA mismatches 
-# export(DF_Second_match %>% filter(is.na(easy_screen)), "missed_these.csv", row.names = F)
-
-# copy it over 
-DF_Second_match$final_answer <- DF_Second_match$easy_screen
-table(DF_Second_match$final_answer, useNA = "ifany")
-
-# fix NAs in the easy_screen with answer
-DF_Second_match$final_answer[is.na(DF_Second_match$final_answer)] <- DF_Second_match$answer[is.na(DF_Second_match$final_answer)]
-table(DF_Second_match$final_answer, useNA = "ifany")
-
-# fix answers that don't agree
-DF_Second_match$final_answer[(DF_Second_match$easy_screen != DF_Second_match$answer)
-                             & !is.na(DF_Second_match$answer) & !is.na(DF_Second_match$easy_screen)] <- DF_Second_match$answer[(DF_Second_match$easy_screen != DF_Second_match$answer)
-                             & !is.na(DF_Second_match$answer) & !is.na(DF_Second_match$easy_screen)]
-table(DF_Second_match$final_answer, useNA = "ifany")
-
-table(DF_Second_match$final_answer, 
+# table of agreement before exclusion of first question mismatches
+table(DF_Second_match$answer, 
       DF_Second_match$name,
       useNA = "ifany") / 120 * 100
 ```
+
+Overall these results indicate a need to examine:
+
+- Articles Issues (this was true before recoding)
+- JIF was recoded (see below)
+
+In a group discussion, we first discovered that the "mismatches" were often from one person indicating they did not have access to the article or disagreeing over if the article was about language. This first question would then lead to all other questions being in disagreement (and likely the unclear category mentioned above - therefore this was a problem in the `ArticleIssues` column). 
+
+Since the goal was to reach 250 articles in each pre and post era, we excluded all articles that were a mismatch because of these two issues (did not have access, article about language). We then recalculated the agreement statistics for the double coded articles in which both articles were actually coded. 
+
+```{r}
+# print out articles that match 
+agree_list <- DF_Second_match %>% 
+  filter(answer == TRUE) %>% 
+  filter(name == "ArticleIssues") %>% 
+  pull(ArticleID)
+
+length(agree_list)
+
+# create a DF of just ones that agree past Article Issues
+DF_Second_match_agree <- DF_Second_match %>% filter(ArticleID %in% agree_list)
+
+# now examine for mismatches 
+table(DF_Second_match_agree$answer, 
+      DF_Second_match_agree$name,
+      useNA = "ifany") / 98 * 100
+```
+
+After excluding articles that did not agree on the first item (and recoding above), we found that coders appeared to partially to completely agree at our threshold level. 
 
 ### Number of Articles
 
@@ -261,6 +281,35 @@ DF <- DF %>% filter(TimeStamp < as.POSIXct("2022-03-14"))
 
 # did we reach our goal?
 table(DF$ArticleIssues, DF$year_split, useNA = "ifany")
+
+# table of double match
+  #grab all articles that weren't double coded
+  not_double <- DF %>% filter(!(ArticleID %in% DF_Second_match$ArticleID)) %>% pull(ArticleID)
+
+DF_agree <- DF %>% filter(ArticleID %in% c(not_double, agree_list))
+table(DF_agree$ArticleIssues, DF_agree$year_split, useNA = "ifany")
+```
+
+### Merge Partial/Unclear Answers
+
+```{r}
+# don't judge me on the loop ok 
+DF_fix <- DF_Second_match_agree %>% filter(!is.na(corrected_answer))
+
+for (i in 1:nrow(DF_fix)){
+  DF_agree[
+    DF_agree$ArticleID == DF_fix$ArticleID[i], # article match 
+    DF_fix$name[i] # variable match
+    ] <- DF_fix$corrected_answer[i]
+}
+```
+
+###### do we want to exclude everything or only include matches ######
+
+```{r}
+# decide if we want to filter 
+# rename DF to ensure match to rest of code
+DF <- DF_agree
 ```
 
 The following sections are in order of our preregistered plan: https://osf.io/j2q5p
@@ -277,7 +326,7 @@ The following sections are in order of our preregistered plan: https://osf.io/j2
   - Derived from Scopus meta-data
 
 ```{r}
-DF$Year[DF$ArticleID == "795dfcd3"] <- 2008
+#DF$Year[DF$ArticleID == "795dfcd3"] <- 2008
 table(DF$Year, useNA = "ifany")
 
 DF$Source.title[DF$ArticleID == "9586644"] <- "Artificial Intelligence Review"
@@ -288,7 +337,6 @@ DF$Source.title[DF$ArticleID == "8.86E+11"] <- "International Journal of Lexicog
 
 table(DF$Source.title, useNA = "ifany")
 ```
-
 
 ### Language Investigated
 
@@ -444,7 +492,11 @@ table(DF$StudyType)
 - If the article reports empirical data, what type of empirical data study is being reported?
   - Experimental study / 
   - Corpus study / 
-  - Field study or language description / Survey or interview / Typological study /   - Multiple study type reported / Other
+  - Field study or language description / 
+  - Survey or interview / 
+  - Typological study /   
+  - Multiple study type reported / 
+  - Other
   
 ```{r}
 DF$EmpiricalStudyData <- sub(" with no systematically sampled material, just selected examples ", "", DF$EmpiricalStudyData)
