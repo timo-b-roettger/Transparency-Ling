@@ -175,19 +175,18 @@ DF <- DF %>% left_join(
 Figure out what to check and export that file for the second coding check. 
 
 ```{r}
-DF_Second <- DF %>% filter(!is.na(round2_coder)) %>% 
-  select(-c(TimeStamp, TimeStarted, DateStarted, OA, 
-            TimeEnded, DateEnded, Year, year_split, clickable_doi, 
-            coder, Source.title, round2_coder)) %>% 
-  group_by(ArticleID) %>% 
-  mutate(coder_num = paste0("coder_", row_number())) %>% 
-  ungroup() %>% 
-  select(-Coder) %>% 
-  pivot_longer(cols = -c(ArticleID, coder_num)) %>% 
-  pivot_wider(id_cols = c(ArticleID, name), 
-              names_from = coder_num, 
-              values_from = value) %>% 
-  mutate(easy_screen = coder_1 == coder_2) 
+DF_Second <- DF %>% 
+      filter(!is.na(round2_coder)) %>% 
+      select(-c(TimeStamp, TimeStarted, DateStarted, OA,
+                TimeEnded, DateEnded, Year, year_split, clickable_doi, 
+                coder, Source.title, round2_coder)) %>% 
+      group_by(ArticleID) %>% 
+      mutate(coder_num = paste0("coder_", row_number())) %>% 
+      ungroup() %>% 
+      pivot_longer(cols = -c(ArticleID, coder_num, Coder)) %>% 
+      pivot_wider(id_cols = c(ArticleID, name),
+                  names_from = coder_num, 
+                  values_from = c(value, Coder))
   
   # original code that excluded NA values and matches #
   # this excluded things I didn't mean to that #
@@ -269,6 +268,9 @@ table(DF_Second_match_agree$answer,
       DF_Second_match_agree$name,
       useNA = "ifany") / 98 * 100
 ```
+
+###### check the empirical study data to make sure if it should be NA or the answer ##### 
+###### make coder document for resolving false and unclear matches #####
 
 After excluding articles that did not agree on the first item (and recoding above), we found that coders appeared to partially to completely agree at our threshold level. 
 
@@ -907,5 +909,10 @@ table(DF$COI)
 table(openaccessDF$open_access)
 ```
 
+### ideas
 
+- show with everything to show small categories
+- zoom in on those that did one to look at those proportions 
+- river plot - conditional probabilities if i do one practice what other ones do I tend to do
+- be sure to consider scaling issue 
 
