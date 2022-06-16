@@ -269,9 +269,6 @@ table(DF_Second_match_agree$answer,
       useNA = "ifany") / 98 * 100
 ```
 
-###### check the empirical study data to make sure if it should be NA or the answer ##### 
-###### make coder document for resolving false and unclear matches #####
-
 After excluding articles that did not agree on the first item (and recoding above), we found that coders appeared to partially to completely agree at our threshold level. 
 
 ### Number of Articles
@@ -296,7 +293,9 @@ table(DF_agree$ArticleIssues, DF_agree$year_split, useNA = "ifany")
 
 ```{r}
 # don't judge me on the loop ok 
-DF_fix <- DF_Second_match_agree %>% filter(!is.na(corrected_answer))
+DF_fix <- import("coder_abritration.xlsx") %>% 
+  filter(include == "included") %>% 
+  filter(!is.na(corrected_answer))
 
 for (i in 1:nrow(DF_fix)){
   DF_agree[
@@ -306,10 +305,7 @@ for (i in 1:nrow(DF_fix)){
 }
 ```
 
-###### do we want to exclude everything or only include matches ######
-
 ```{r}
-# decide if we want to filter 
 # rename DF to ensure match to rest of code
 DF <- DF_agree
 ```
