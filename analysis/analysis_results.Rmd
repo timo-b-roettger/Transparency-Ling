@@ -28,12 +28,15 @@ library(psych)
 library(ggplot2)
 library(maps)
 library(countrycode)
+library(webr)
+
 ```
 
 ## Get the Data
 
 ```{r}
 DF <- import("coded_responses.xlsx")
+#DF <- import("analysis/coded_responses.xlsx")
 # names(DF)
 
 # column 35 is empty
@@ -58,6 +61,9 @@ colnames(DF) <- c("TimeStamp", "TimeStarted", "DateStarted",
 prescreenDF <- import("../Prescreening/prescreening_round1.csv")
 prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
 
+#prescreenDF <- import("Prescreening/prescreening_round1.csv")
+#prescreenDF2 <- import("data/prescreening_list_2021-07-04.txt")
+
 # deal with the duplicate ID issue 
 # we didn't code this one but we did code the other one
 # as per github page (pulled original number)
@@ -65,10 +71,14 @@ prescreenDF$ID[prescreenDF$Title == "Quantified epistemic logics for reasoning a
 
 # import the OA code
 openaccessDF <- import("OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
+#openaccessDF <- import("analysis/OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
 
 # import code on who was doing what to check all are done
 coder1 <- import("../data/randomized_prescreen_df_2021_10_21.csv")
 coder2 <- import("../data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
+
+#coder1 <- import("data/randomized_prescreen_df_2021_10_21.csv")
+#coder2 <- import("data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
 ```
 
 ### Clean Up Data
@@ -196,6 +206,8 @@ DF_Second <- DF %>%
   # mutate(check = rep(c("EB", "KC", "IC", "CH"), length.out = nrow(.)))
 
 export(DF_Second, "second_coder_check.csv", row.names = F)
+#export(DF_Second, "analysis/second_coder_check.csv", row.names = F)
+
 ```
 
 Import and examine the results from the second coding check. 
@@ -210,6 +222,8 @@ We also separately coded JIF because only a few members had access to the inform
 
 ```{r}
 DF_Second_import <- import("second_coder_done.xlsx")
+#DF_Second_import <- import("analysis/second_coder_done.xlsx")
+
 
 DF_Second_match <- DF %>% filter(!is.na(round2_coder)) %>% 
   select(-c(TimeStamp, TimeStarted, DateStarted, OA, 
@@ -294,6 +308,7 @@ table(DF_agree$ArticleIssues, DF_agree$year_split, useNA = "ifany")
 ```{r}
 # don't judge me on the loop ok 
 DF_fix <- import("coder_abritration.xlsx") %>% 
+#DF_fix <- import("analysis/coder_abritration.xlsx") %>% 
   filter(include == "included") %>% 
   filter(!is.na(corrected_answer))
 
@@ -402,6 +417,7 @@ lang_summary <- langDF %>%
   filter(language %in% c("English", "Universal", "Spanish", "Chinese", "Cross Linguistic", "French", "German", "Polish")) %>% 
   mutate(year_split = factor(year_split, levels = c("Pre-OS", "After-OS")))
 
+
 ggplot(lang_summary, aes(language, frequency,
                          color = year_split, fill = year_split)) + 
   geom_bar(stat = "identity", position = position_dodge()) + 
@@ -411,6 +427,49 @@ ggplot(lang_summary, aes(language, frequency,
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.4)) +
   scale_color_discrete(name = "Publication Year") + 
   scale_fill_discrete(name = "Publication Year")
+
+
+# TR enters ;)
+
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+lang_summary_all <- langDF %>% 
+  mutate(language_new = ifelse(language %!in% c("english", "universal", "spanish", "chinese", "cross linguistic", "german"),
+                           "other", language)) %>% 
+  group_by(language_new, year_split) %>% 
+  summarise(frequency = n()) %>% 
+  ungroup() %>% 
+  mutate(language_new=factor(tools::toTitleCase(language_new),levels = unique(tools::toTitleCase(language_new)),ordered = T)) %>% 
+  mutate(year_split = factor(year_split, levels = c("Pre-OS", "After-OS")))
+
+# please someone make this in one pipeline
+freq_split <- lang_summary_all %>% 
+  group_by(year_split) %>% 
+  summarise(frequency_split = sum(frequency)) %>% 
+  ungroup() %>% 
+  full_join(lang_summary_all) %>% 
+  mutate(prop = round(frequency / frequency_split, 3) * 100) %>% 
+  group_by(year_split) %>% 
+  arrange(desc(prop)) %>%
+  ungroup()
+
+
+donut_languages <- ggplot(freq_split, aes(x = year_split, y = prop, fill = language_new)) +
+  geom_col() +
+  coord_polar("y") +
+  labs(title = "A: Proportion of languages under investigation",
+       subtitle = "inner ring = 2008/09; \nouter ring = 2018/19") + 
+  scale_x_discrete(limits = c(" ", "Pre-OS","After-OS")) +
+  guides(fill = guide_legend(title="Target Language(s)")) +
+  theme_void() +
+  scale_fill_viridis_d() +
+  theme(
+    plot.title = element_text(face = "bold",
+                                       size = 14),
+    plot.subtitle = element_text(size = 12)
+  )
+ 
+
 ```
 
 ### JIF 
@@ -427,8 +486,33 @@ ggplot(lang_summary, aes(language, frequency,
 
 ```{r}
 JIF <- import("JIF_update.xlsx")
+#JIF <- import("analysis/JIF_update.xlsx")
 # describe jif
 describeBy(as.numeric(JIF$JIF), group = JIF$Year)
+
+# enter TR
+JIF_new <- JIF %>%  
+  filter(JIFYear != "NA") %>% 
+  mutate(JIF = as.numeric(JIF),
+         JIFYear = as.numeric(JIFYear),
+    year_split = ifelse(JIFYear > 2016, "After-OS", "Pre-OS"))
+
+JIF_plot <- 
+ggplot(JIF_new,
+       aes(x = JIF, fill = year_split)) + 
+  geom_density(alpha = 0.5,
+               color = "white") +
+  geom_point(y = 0, 
+             pch = 21,
+             color = "white",
+             alpha = 0.5,
+             show.legend = F) +
+  guides(fill = guide_legend(title = "Time Frame")) +
+  scale_fill_viridis_d() +
+  theme_minimal() + 
+  theme(legend.position = c(0.9,0.8),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank())
 
 # DF %>% select(JIF, JIFYear, ArticleID, Source.title, Year) %>% 
 #   export(x = ., file = "jif_update.csv", row.names = F)
@@ -466,12 +550,52 @@ country_summary <- DF %>%
       group_by(CountryCode) %>% 
       summarize(n = n())
 
-
 ggplot(country_summary) +
   geom_map(aes(map_id = CountryCode, fill = n), map = world_map) +
   geom_polygon(data = world_map, aes(x = long, y = lat, group = group), colour = 'black', fill = NA) + 
   theme_void() + 
   scale_fill_continuous(name = "Sample Size")
+
+
+# TR enters ;)
+'%!in%' <- function(x,y)!('%in%'(x,y))
+
+lang_summary_all <- langDF %>% 
+  mutate(language_new = ifelse(language %!in% c("english", "universal", "spanish", "chinese", "cross linguistic", "german"),
+                           "other", language)) %>% 
+  group_by(language_new, year_split) %>% 
+  summarise(frequency = n()) %>% 
+  ungroup() %>% 
+  mutate(language_new=factor(tools::toTitleCase(language_new),levels = unique(tools::toTitleCase(language_new)),ordered = T)) %>% 
+  mutate(year_split = factor(year_split, levels = c("Pre-OS", "After-OS")))
+
+# please someone make this in one pipeline
+freq_split <- lang_summary_all %>% 
+  group_by(year_split) %>% 
+  summarise(frequency_split = sum(frequency)) %>% 
+  ungroup() %>% 
+  full_join(lang_summary_all) %>% 
+  mutate(prop = round(frequency / frequency_split, 3) * 100) %>% 
+  group_by(year_split) %>% 
+  arrange(desc(prop)) %>%
+  ungroup()
+
+
+donut_languages <- ggplot(freq_split, aes(x = year_split, y = prop, fill = language_new)) +
+  geom_col() +
+  coord_polar("y") +
+  labs(title = "A: Proportion of languages under investigation",
+       subtitle = "inner ring = 2008/09; \nouter ring = 2018/19") + 
+  scale_x_discrete(limits = c(" ", "Pre-OS","After-OS")) +
+  guides(fill = guide_legend(title="Target Language(s)")) +
+  theme_void() +
+  scale_fill_viridis_d() +
+  theme(
+    plot.title = element_text(face = "bold",
+                                       size = 14),
+    plot.subtitle = element_text(size = 12)
+  )
+
 ```
 
 ### Study type/design
