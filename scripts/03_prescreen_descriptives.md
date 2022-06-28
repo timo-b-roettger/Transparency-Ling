@@ -1,5 +1,6 @@
 Prescreening descriptive analysis
 ================
+Joseph V. Casillas
 
 ``` r
 # Import full dataset

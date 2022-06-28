@@ -11,10 +11,16 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-## Pilot Pre-screening
+## Pilot Prescreening
+
+In the pilot prescreening, two coders (EMB, IAC) examined articles that were found in a randomized set from the data selection procedure. 50 articles (25 pre-open science, 25 post-open science) were piloted to examine the potential proportions of included versus excluded articles. As shown in the code below, we found:
+
+- Pre-OS approximately 68% of the articles were included, post-OS only 40% of articles were included. 
+- Overall, this implies approximately 54% of articles would likely be included. 
+- We can expect to not be able to find some articles, even after trying to get through the potential pay wall (10%). 
 
 ```{r}
-pilot <- read.csv("pilot_prescreening.csv")
+pilot <- read.csv("prescreening_pilot.csv")
 
 # reduce just to articles piloted 
 pilot <- subset(pilot, !is.na(count))
@@ -41,7 +47,9 @@ table(pilot$erin.code, useNA = "ifany")
 table(pilot$erin.code, useNA = "ifany")/50 * 100
 ```
 
-## R Markdown
+## Create Real Screening List
+
+After this pilot test, we again randomly selected articles based on the overall data selection procedure. This file was originally printed here and saved for the prescreening team to work on. 
 
 ```{r display_list, echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -50,8 +58,7 @@ list_sub <- list %>%
   mutate(row_num = seq.int(nrow(list))) %>% 
   select(row_num, ID, clickable_doi, Title, Year, Authors) 
 
-knitr::kable(list_sub)
-
+#knitr::kable(list_sub)
 ```
 
 Print out the list for working with others:
@@ -62,9 +69,82 @@ list_sub$year_split <- factor(list_sub$year_split,
                            levels = c(TRUE, FALSE),
                            labels = c("Pre-OS", "After-OS"))
 
-write.csv(list_sub, "prescreening.csv", row.names = F)
+#write.csv(list_sub, "prescreening_list.csv", row.names = F)
 ```
 
+## Prescreening (Round 1) Results
 
+EMB, IAC, and KC completed the prescreening during Fall 2021. We first assigned each person to screen 200 articles (100 pre, 100 post) for a total of 600 articles screened (200 * 3 people). We then examined the proportions of included versus included articles and determined that we may achieve coverage desired (300 articles in pre and post, therefore 600 total) if each person again coded 200 articles. Therefore, we did two first round screenings of the data. We then examined our number of articles coded by the first coder to include and determined we had reached our goal of 600 articles. Therefore, we proposed to the remainder of the team to include these articles and *not* perform second round coding of the No/Unsure articles. The pre-registration said: 
+
+- Any article marked by at least *one* person as "yes include" would be sent to the next round of data processing.
+- Articles marked No/Unsure would be coded by a second person to determine if it should be included.
+- We wished to achieve 600 articles total (300 pre, 300 post) with the goal that these may still have articles that the data processing team decides are not "linguistic". The goal was to match the 250 completed in the original paper. 
+
+The entire team discussed and decided that the coverage of included articles was the ultimate goal, and we would not code the No/Unsure articles for a second coder, *unless* the data processing team excluded enough articles that a second round of prescreening became necessary. 
+
+During our (EMB, IAC, KC) discussions, we considered what articles should be marked as no (reasons can be see in the prescreen results). The common themes included: vision/perception research, translation research, theater, teaching practices, religion, politics, philosophy, literature discussions, history, and culture. The largest category was literature reviews and works. We clarified that cognitive/social psychology research that included language stimuli (usually words) should not be included if the paper was not about language, just happened to use language stimuli (for example, studies on memory). Items that were considered somewhat of a "gray" area included: communication studies, sociolinguistics-adjacent research, and cultural work. 
+
+```{r}
+psR1 <- read.csv("prescreening_round1.csv")
+
+# original number of articles
+nrow(psR1)
+
+psR1 <- subset(psR1, first_code_initials != "")
+
+# total screened
+nrow(psR1)
+```
+
+Of the 1200 articles screened, we found 610 (50.8%) to include in further data processing. 96 articles (8%) could not be found leaving the remaining 494 (41.2%) as no or unsure if should be included. 
+
+```{r}
+psR1$first_code_include <- gsub("\\s$", "", psR1$first_code_include)
+
+# raw counts
+table(psR1$first_code_include, useNA = "ifany")
+
+# percent counts
+table(psR1$first_code_include, useNA = "ifany") / sum(table(psR1$first_code_include, useNA = "ifany")) * 100
+```
+
+In this section, we examine if there are differences in coders for a yes-no/unsure distinction. We drop articles with no access. Note that articles not in English are included in the "no" category. 
+
+We find significant differences between coders using $\alpha$ < .05 and a chi-square test of independence. The effect appears small (Cramer's V = .06). An examination of the standardized residuals appears to indicate that IAC was more likely to mark No while KC was more likely to mark Yes using an absolute value *z*-score greater than 2 as an indicator. Therefore, we found a slight difference between coders, but these appear small. 
+
+```{r}
+psR1$coder <- gsub("[0-9]", "", psR1$first_code_initials)
+table(psR1$coder)
+
+table(psR1$coder, psR1$first_code_include)
+
+psR1$yes_no <- psR1$first_code_include
+psR1$yes_no <- gsub("No Access", NA, psR1$yes_no)
+psR1$yes_no <- gsub("Unsure", "No", psR1$yes_no)
+
+table(psR1$coder, psR1$yes_no)
+
+coder_diffs <- chisq.test(psR1$coder, psR1$yes_no)
+v <- sqrt(coder_diffs$statistic/(sum(coder_diffs$observed) * 2))
+
+coder_diffs
+v
+coder_diffs$stdres
+```
+
+Second, we examined the differences in yes-no coding for pre and post OS. No evidence was found for differences in yes-no coding and the year of publication.  
+
+```{r}
+table(psR1$year_split, psR1$first_code_include)
+
+table(psR1$year_split, psR1$yes_no)
+
+year_diffs <- chisq.test(psR1$year_split, psR1$yes_no)
+v_year <- sqrt(year_diffs$statistic/(sum(year_diffs$observed) * 2))
+
+year_diffs
+v_year
+year_diffs$stdres
+```
 
 
