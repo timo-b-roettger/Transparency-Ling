@@ -13,6 +13,11 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+#####add splits#####
+#####clean up a few things#####
+#####print out the articles that do the thing#####
+
+
 ## Analysis Plan
 
 For each measured variable, we will report raw numbers and percentages in each response category. Additional analyses will be exploratory; we are not conducting confirmatory tests of any a priori hypotheses.
@@ -322,6 +327,8 @@ The following sections are in order of our preregistered plan: https://osf.io/j2
   - Derived from Scopus meta-data
 - Field
   - Derived from Scopus meta-data
+  
+  #####add simple count of how many #####
 
 ```{r}
 #DF$Year[DF$ArticleID == "795dfcd3"] <- 2008
@@ -341,6 +348,9 @@ table(DF$Source.title, useNA = "ifany")
 - What language does the article investigate?
   - Free text response (multiple responses possible)
   - Additional instructions: "Multiple responses possible. If there are more than 5 languages refer to as  "cross linguistic". If in doubt, refer to as "unclear". If article makes claim about all languages, refer to as "universal"
+  
+  #### add output of the raw text #### 
+  #### summarize with graphic #### 
 
 ```{r}
 # lower case to normalize
@@ -412,6 +422,8 @@ ggplot(lang_summary, aes(language, frequency,
   scale_color_discrete(name = "Publication Year") + 
   scale_fill_discrete(name = "Publication Year")
 ```
+
+#####donut chart, word cloud #####
 
 ### JIF 
 
