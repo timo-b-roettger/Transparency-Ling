@@ -29,6 +29,7 @@ library(ggplot2)
 library(maps)
 library(countrycode)
 library(webr)
+library(patchwork)
 
 ```
 
@@ -464,9 +465,11 @@ donut_languages <- ggplot(freq_split, aes(x = year_split, y = prop, fill = langu
   theme_void() +
   scale_fill_viridis_d() +
   theme(
+    legend.position = "left",
     plot.title = element_text(face = "bold",
                                        size = 14),
-    plot.subtitle = element_text(size = 12)
+    plot.subtitle = element_text(size = 12),
+    plot.title.position = "plot"
   )
  
 
@@ -507,12 +510,18 @@ ggplot(JIF_new,
              color = "white",
              alpha = 0.5,
              show.legend = F) +
+  labs(title = "B: Distribution of JIF across sample",
+       subtitle = "displaying an slight upward trend of journals in later years") + 
   guides(fill = guide_legend(title = "Time Frame")) +
   scale_fill_viridis_d() +
   theme_minimal() + 
   theme(legend.position = c(0.9,0.8),
         axis.title.y = element_blank(),
-        axis.text.y = element_blank())
+        axis.text.y = element_blank(),
+         plot.title = element_text(face = "bold",
+                                       size = 14),
+        plot.subtitle = element_text(size = 12))
+
 
 # DF %>% select(JIF, JIFYear, ArticleID, Source.title, Year) %>% 
 #   export(x = ., file = "jif_update.csv", row.names = F)
@@ -557,44 +566,47 @@ ggplot(country_summary) +
   scale_fill_continuous(name = "Sample Size")
 
 
-# TR enters ;)
-'%!in%' <- function(x,y)!('%in%'(x,y))
+# TR enters ;) UK, USA, Australia, Germany, China, Netherlands, Spain
 
-lang_summary_all <- langDF %>% 
-  mutate(language_new = ifelse(language %!in% c("english", "universal", "spanish", "chinese", "cross linguistic", "german"),
-                           "other", language)) %>% 
-  group_by(language_new, year_split) %>% 
-  summarise(frequency = n()) %>% 
-  ungroup() %>% 
-  mutate(language_new=factor(tools::toTitleCase(language_new),levels = unique(tools::toTitleCase(language_new)),ordered = T)) %>% 
-  mutate(year_split = factor(year_split, levels = c("Pre-OS", "After-OS")))
-
-# please someone make this in one pipeline
-freq_split <- lang_summary_all %>% 
+country_summary_new <- DF %>% 
+   mutate(CountryAuthor_new = ifelse(CountryAuthor %!in% c("UK", "USA", "Australia", "Germany", "China", "Netherlands", "Spain"), "Other", CountryAuthor)) %>% 
+      group_by(CountryAuthor_new, year_split) %>% 
+      summarize(frequency = n()) %>% 
+      ungroup()
+  
+country_split <- country_summary_new %>% 
   group_by(year_split) %>% 
   summarise(frequency_split = sum(frequency)) %>% 
-  ungroup() %>% 
-  full_join(lang_summary_all) %>% 
-  mutate(prop = round(frequency / frequency_split, 3) * 100) %>% 
-  group_by(year_split) %>% 
-  arrange(desc(prop)) %>%
-  ungroup()
+  full_join(country_summary_new) %>% 
+  mutate(prop = round(frequency / frequency_split, 3) * 100)
 
 
-donut_languages <- ggplot(freq_split, aes(x = year_split, y = prop, fill = language_new)) +
+
+donut_countries <- ggplot(country_split, aes(x = year_split, y = prop, fill = CountryAuthor_new)) +
   geom_col() +
   coord_polar("y") +
-  labs(title = "A: Proportion of languages under investigation",
+  labs(title = "B: Proportion of author's host country",
        subtitle = "inner ring = 2008/09; \nouter ring = 2018/19") + 
   scale_x_discrete(limits = c(" ", "Pre-OS","After-OS")) +
-  guides(fill = guide_legend(title="Target Language(s)")) +
+  guides(fill = guide_legend(title="Host Country(s)")) +
   theme_void() +
   scale_fill_viridis_d() +
   theme(
     plot.title = element_text(face = "bold",
                                        size = 14),
-    plot.subtitle = element_text(size = 12)
+    plot.subtitle = element_text(size = 12),
+    plot.title.position = "plot"
   )
+
+sample_characteristics <- donut_languages + donut_countries 
+
+ggsave(filename = "plots/sample_characteristics.png",
+       plot = sample_characteristics,
+       device = "png",
+       width = 360, 
+       height = 150,
+       units = "mm", 
+       dpi = 500)
 
 ```
 
