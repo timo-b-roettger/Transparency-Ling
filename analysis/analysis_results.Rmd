@@ -357,6 +357,12 @@ DF$Source.title[DF$ArticleID == "5.84E+59"] <- "Language, Culture and Curriculum
 DF$Source.title[DF$ArticleID == "8.86E+11"] <- "International Journal of Lexicography"
 
 table(DF$Source.title, useNA = "ifany")
+
+# how many different journals in each split
+length(unique(DF$Source.title))
+DF %>% 
+  group_by(year_split) %>% 
+  summarize(n_distinct(Source.title))
 ```
 
 ### Language Investigated
@@ -387,8 +393,9 @@ DF$ArticleLanguage <- gsub("portugese", "portuguese", DF$ArticleLanguage)
 DF$ArticleLanguage <- gsub("chinese-cantonese", "chinese", DF$ArticleLanguage)
 DF$ArticleLanguage <- gsub("nederlandse gebarentaal", "dutch sign language", DF$ArticleLanguage)
 DF$ArticleLanguage <- gsub("shetland, scottish", "", DF$ArticleLanguage)
-DF$ArticleLanguage <- gsub('"|old|\\(|\\)|subjects:|stimuli:|\\?|as a second language|shetland|middle|mandarin|european|cameroon|british|-putonghua|cypriot|fiji', '', DF$ArticleLanguage)
-DF$ArticleLanguage <- gsub("multilingual context 10\\+ languages", "cross-linguistic", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub('"|old|\\(|\\)|subjects:|stimuli:|\\?|as a second language|shetland|middle|mandarin|european|cameroon|british|-putonghua|cypriot|fiji|australian', '', DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("multilingual context 10\\+ languages|multilingualism", "cross-linguistic", DF$ArticleLanguage)
+DF$ArticleLanguage <- gsub("quecha", "quechua", DF$ArticleLanguage)
 DF$ArticleLanguage <- trimws(DF$ArticleLanguage)
 
 langDF <- DF %>% 
