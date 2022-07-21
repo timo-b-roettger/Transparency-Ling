@@ -36,8 +36,8 @@ library(patchwork)
 ## Get the Data
 
 ```{r}
-DF <- import("coded_responses.xlsx")
-#DF <- import("analysis/coded_responses.xlsx")
+#DF <- import("coded_responses.xlsx")
+DF <- import("analysis/coded_responses.xlsx")
 # names(DF)
 
 # column 35 is empty
@@ -59,11 +59,11 @@ colnames(DF) <- c("TimeStamp", "TimeStarted", "DateStarted",
                   "EmpiricalStudyData", "JIFYear")
 
 # list of information from scopus
-prescreenDF <- import("../Prescreening/prescreening_round1.csv")
-prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
+#prescreenDF <- import("../Prescreening/prescreening_round1.csv")
+#prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
 
-#prescreenDF <- import("Prescreening/prescreening_round1.csv")
-#prescreenDF2 <- import("data/prescreening_list_2021-07-04.txt")
+prescreenDF <- import("Prescreening/prescreening_round1.csv")
+prescreenDF2 <- import("data/prescreening_list_2021-07-04.txt")
 
 # deal with the duplicate ID issue 
 # we didn't code this one but we did code the other one
@@ -71,15 +71,15 @@ prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
 prescreenDF$ID[prescreenDF$Title == "Quantified epistemic logics for reasoning about knowledge in multi-agent systems"] <- "e754dd1b"
 
 # import the OA code
-openaccessDF <- import("OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
-#openaccessDF <- import("analysis/OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
+#openaccessDF <- import("OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
+openaccessDF <- import("analysis/OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
 
 # import code on who was doing what to check all are done
-coder1 <- import("../data/randomized_prescreen_df_2021_10_21.csv")
-coder2 <- import("../data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
+#coder1 <- import("../data/randomized_prescreen_df_2021_10_21.csv")
+#coder2 <- import("../data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
 
-#coder1 <- import("data/randomized_prescreen_df_2021_10_21.csv")
-#coder2 <- import("data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
+coder1 <- import("data/randomized_prescreen_df_2021_10_21.csv")
+coder2 <- import("data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
 ```
 
 ### Clean Up Data
@@ -206,8 +206,8 @@ DF_Second <- DF %>%
   # filter(easy_screen == F) %>% 
   # mutate(check = rep(c("EB", "KC", "IC", "CH"), length.out = nrow(.)))
 
-export(DF_Second, "second_coder_check.csv", row.names = F)
-#export(DF_Second, "analysis/second_coder_check.csv", row.names = F)
+#export(DF_Second, "second_coder_check.csv", row.names = F)
+export(DF_Second, "analysis/second_coder_check.csv", row.names = F)
 
 ```
 
@@ -222,8 +222,8 @@ First, EMB noticed that she did not print out the article mismatches for review 
 We also separately coded JIF because only a few members had access to the information in a specialized database. 
 
 ```{r}
-DF_Second_import <- import("second_coder_done.xlsx")
-#DF_Second_import <- import("analysis/second_coder_done.xlsx")
+#DF_Second_import <- import("second_coder_done.xlsx")
+DF_Second_import <- import("analysis/second_coder_done.xlsx")
 
 
 DF_Second_match <- DF %>% filter(!is.na(round2_coder)) %>% 
@@ -308,8 +308,8 @@ table(DF_agree$ArticleIssues, DF_agree$year_split, useNA = "ifany")
 
 ```{r}
 # don't judge me on the loop ok 
-DF_fix <- import("coder_abritration.xlsx") %>% 
-#DF_fix <- import("analysis/coder_abritration.xlsx") %>% 
+#DF_fix <- import("coder_abritration.xlsx") %>% 
+DF_fix <- import("analysis/coder_abritration.xlsx") %>% 
   filter(include == "included") %>% 
   filter(!is.na(corrected_answer))
 
@@ -432,6 +432,7 @@ ggplot(lang_summary, aes(language, frequency,
 
 # TR enters ;)
 
+# define handy function 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
 lang_summary_all <- langDF %>% 
@@ -454,18 +455,43 @@ freq_split <- lang_summary_all %>%
   arrange(desc(prop)) %>%
   ungroup()
 
+colors_lang = c("#8dd3c7",
+                "#ffffb3",
+                "#bebada",
+                "#fb8072",
+                "#80b1d3",
+                "#fdb462",
+                "#b3de69")
 
-donut_languages <- ggplot(freq_split, aes(x = year_split, y = prop, fill = language_new)) +
-  geom_col() +
-  coord_polar("y") +
-  labs(title = "A: Proportion of languages under investigation",
-       subtitle = "inner ring = 2008/09; \nouter ring = 2018/19") + 
-  scale_x_discrete(limits = c(" ", "Pre-OS","After-OS")) +
+freq_split$language_new <- factor(freq_split$language_new,
+                levels = c("Chinese", "German", 
+                           "Spanish", "Cross Linguistic", 
+                           "Universal", "Other",
+                           "English"))
+
+bar_languages <- 
+  ggplot(freq_split, aes(x = year_split, 
+                         y =  prop, 
+                         fill = language_new)) +
+  geom_bar(stat = "identity",
+           #col = "black",
+           position = position_stack()) +
+  geom_text(data = freq_split[freq_split$language_new %in% c("English", "Other", "Universal"),],
+            aes(x = year_split,
+                y = prop,
+                label = paste0(prop, "%")),
+            position = position_stack(vjust = 0.5)) +
+  labs(title = "B: Proportion of languages in sample",
+       x = "",
+       y = "") + 
+  scale_x_discrete(limits = c("Pre-OS","After-OS")) +
+  scale_y_continuous(breaks = c(0,25,50,75,100), 
+                     labels = c("0%", "25%", "50%", "75%", "100%")) + 
   guides(fill = guide_legend(title="Target Language(s)")) +
-  theme_void() +
   scale_fill_viridis_d() +
+  theme_minimal() +
   theme(
-    legend.position = "left",
+    legend.position = "right",
     plot.title = element_text(face = "bold",
                                        size = 14),
     plot.subtitle = element_text(size = 12),
@@ -488,8 +514,8 @@ donut_languages <- ggplot(freq_split, aes(x = year_split, y = prop, fill = langu
 **Note**: We had a separate group code JIF, as only a few had access to the database with these values. 
 
 ```{r}
-JIF <- import("JIF_update.xlsx")
-#JIF <- import("analysis/JIF_update.xlsx")
+#JIF <- import("JIF_update.xlsx")
+JIF <- import("analysis/JIF_update.xlsx")
 # describe jif
 describeBy(as.numeric(JIF$JIF), group = JIF$Year)
 
@@ -500,28 +526,62 @@ JIF_new <- JIF %>%
          JIFYear = as.numeric(JIFYear),
     year_split = ifelse(JIFYear > 2016, "After-OS", "Pre-OS"))
 
+# put to top once integrated
+library(ggdist)
+
+JIF_new_agg <- JIF_new %>% 
+  group_by(year_split) %>% 
+  summarize(sum = n(),
+            se = sd(JIF, na.rm = TRUE) / sqrt(sum),
+            JIF = median(JIF, na.rm = TRUE))
+
+JIF_new$year_split <- factor(JIF_new$year_split, 
+                      levels = c("Pre-OS", "After-OS"))
+
 JIF_plot <- 
 ggplot(JIF_new,
-       aes(x = JIF, fill = year_split)) + 
-  geom_density(alpha = 0.5,
-               color = "white") +
-  geom_point(y = 0, 
-             pch = 21,
-             color = "white",
-             alpha = 0.5,
-             show.legend = F) +
-  labs(title = "B: Distribution of JIF across sample",
-       subtitle = "displaying an slight upward trend of journals in later years") + 
-  guides(fill = guide_legend(title = "Time Frame")) +
-  scale_fill_viridis_d() +
-  theme_minimal() + 
-  theme(legend.position = c(0.9,0.8),
-        axis.title.y = element_blank(),
-        axis.text.y = element_blank(),
-         plot.title = element_text(face = "bold",
+       aes(x = year_split,
+           #y = JIF 
+           y = JIF
+           #colour = year_split
+           )) +
+    stat_slab(data = JIF_new,
+            aes(y = JIF,
+                fill_ramp = stat(cut_cdf_qi(cdf, 
+                                            .width = c(.5, .8, .95),
+                                            labels = scales::percent_format()))), 
+            color = NA, 
+            fill = "#C038A3",
+            scale = 0.5, 
+            side = "left") +
+    scale_fill_ramp_discrete(from = "white",
+                           range = c(1,0.25)) +
+    stat_dotsinterval(scale = 0.5, 
+                      fill = "#C038A3",
+                    quantiles = 50, 
+                    side = "right",
+                    slab_color = NA,
+                    show_point = FALSE,
+                    show_interval = FALSE) +
+  geom_point(data = JIF_new_agg,
+             aes(x = year_split,
+                 y = JIF),
+             color = "black",
+             size = 3) +
+  labs(title = "A: Distribution of JIF",
+       #subtitle = "for 2008-2009 (left) and 2018-2019 (right)",
+       x = "",
+       y = "journal impact factor\n") +
+  scale_y_continuous(breaks = c(0,1,2,3), 
+                     limits = c(0,4)) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold",
                                        size = 14),
-        plot.subtitle = element_text(size = 12))
-
+    plot.subtitle = element_text(size = 12),
+    plot.title.position = "plot"
+  )
 
 # DF %>% select(JIF, JIFYear, ArticleID, Source.title, Year) %>% 
 #   export(x = ., file = "jif_update.csv", row.names = F)
@@ -581,7 +641,6 @@ country_split <- country_summary_new %>%
   mutate(prop = round(frequency / frequency_split, 3) * 100)
 
 
-
 donut_countries <- ggplot(country_split, aes(x = year_split, y = prop, fill = CountryAuthor_new)) +
   geom_col() +
   coord_polar("y") +
@@ -598,13 +657,15 @@ donut_countries <- ggplot(country_split, aes(x = year_split, y = prop, fill = Co
     plot.title.position = "plot"
   )
 
-sample_characteristics <- donut_languages + donut_countries 
+
+# Put JIF and country plot together
+sample_characteristics <- JIF_plot  + bar_languages + plot_layout(widths = c(1, 0.7))
 
 ggsave(filename = "plots/sample_characteristics.png",
        plot = sample_characteristics,
        device = "png",
-       width = 360, 
-       height = 150,
+       width = 177.8, 
+       height = 100,
        units = "mm", 
        dpi = 500)
 
@@ -825,11 +886,13 @@ table(DF$RawDataAvl)
   - Other*
 
 ```{r}
+
 DF$RawDataWhere <- sub("as part of the article \\(individual examples\\)|raw data are available as individual examples in the article", "In Article", DF$RawDataWhere)
 DF$RawDataWhere <- sub("Blog", "Personal or institutional website", DF$RawDataWhere)
 DF$RawDataWhere <- sub(".*corpus.*", "Available from a third party", DF$RawDataWhere)
 DF$RawDataWhere <- sub("Links to online sources, one does not work", "Available from a third party", DF$RawDataWhere)
 table(DF$RawDataWhere)
+
 ```
 
 ### Raw data accessibility
@@ -848,6 +911,49 @@ table(DF$RawDataAccess)
   
 ```{r}
 table(DF$RawDataDocument)
+```
+
+```{r}
+
+# first river plot attempts
+remotes::install_github("corybrunson/ggalluvial", ref = "optimization")
+library(ggalluvial)
+library(ggfittext)
+
+# make fake data, wrangle real data later
+dummy_df <- data.frame(study_type = sample(c("primary", "secondary", "other"), 450, replace = TRUE),
+                       data_type = c(rep("text", 300), rep("audio", 100), rep("video", 50)),
+                       available = c(rep("yes", 50), rep("no", 250),
+                                     rep("yes", 20), rep("no", 80),
+                                     rep("yes", 10), rep("no", 40))) %>% 
+  mutate(study_type = factor(study_type, levels = c("primary", "secondary", "other"))) %>% 
+  group_by(study_type, data_type, available) %>% 
+  summarize(sum = n())
+
+ggplot(data = dummy_df,
+       aes(axis1 = study_type, 
+           axis2 = data_type, 
+           axis3 = available,
+           fill = available,
+           y = sum)) +
+  scale_x_discrete(limits = c("study type", "data type", "available"), expand = c(.2, .05)) +
+  scale_fill_manual(values = c("#b8627dff", "#22A884FF")) + 
+  labs(title = "data availability across study and data types",
+       y = "",
+       x = "") +
+  geom_alluvium() +
+  geom_stratum(color = c("grey", "grey", "grey",
+                        "grey", "grey", "grey",
+                        "#22A884FF", "#b8627dff"), 
+               fill = c("white", "white", "white",
+                        "white", "white", "white",
+                        "#22A884FF", "#b8627dff")) +
+  #ggfittext::geom_fit_text(stat = "stratum", width = 1/4, min.size = 3) +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+  theme_minimal() +
+  theme(legend.position =  "none",
+        )
+
 ```
 
 ### Processed data statement
