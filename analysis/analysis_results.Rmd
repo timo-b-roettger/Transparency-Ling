@@ -42,7 +42,7 @@ library(patchwork)
 
 ```{r}
 #DF <- import("coded_responses.xlsx")
-DF <- import("analysis/coded_responses.xlsx")
+DF <- import("../analysis/coded_responses.xlsx")
 # names(DF)
 
 # column 35 is empty
@@ -67,8 +67,8 @@ colnames(DF) <- c("TimeStamp", "TimeStarted", "DateStarted",
 #prescreenDF <- import("../Prescreening/prescreening_round1.csv")
 #prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
 
-prescreenDF <- import("Prescreening/prescreening_round1.csv")
-prescreenDF2 <- import("data/prescreening_list_2021-07-04.txt")
+prescreenDF <- import("../Prescreening/prescreening_round1.csv")
+prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
 
 # deal with the duplicate ID issue 
 # we didn't code this one but we did code the other one
@@ -77,14 +77,14 @@ prescreenDF$ID[prescreenDF$Title == "Quantified epistemic logics for reasoning a
 
 # import the OA code
 #openaccessDF <- import("OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
-openaccessDF <- import("analysis/OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
+openaccessDF <- import("../analysis/OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
 
 # import code on who was doing what to check all are done
 #coder1 <- import("../data/randomized_prescreen_df_2021_10_21.csv")
 #coder2 <- import("../data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
 
-coder1 <- import("data/randomized_prescreen_df_2021_10_21.csv")
-coder2 <- import("data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
+coder1 <- import("../data/randomized_prescreen_df_2021_10_21.csv")
+coder2 <- import("../data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
 ```
 
 ### Clean Up Data
@@ -212,7 +212,7 @@ DF_Second <- DF %>%
   # mutate(check = rep(c("EB", "KC", "IC", "CH"), length.out = nrow(.)))
 
 #export(DF_Second, "second_coder_check.csv", row.names = F)
-export(DF_Second, "analysis/second_coder_check.csv", row.names = F)
+export(DF_Second, "../analysis/second_coder_check.csv", row.names = F)
 
 ```
 
@@ -228,7 +228,7 @@ We also separately coded JIF because only a few members had access to the inform
 
 ```{r}
 #DF_Second_import <- import("second_coder_done.xlsx")
-DF_Second_import <- import("analysis/second_coder_done.xlsx")
+DF_Second_import <- import("../analysis/second_coder_done.xlsx")
 
 
 DF_Second_match <- DF %>% filter(!is.na(round2_coder)) %>% 
@@ -314,7 +314,7 @@ table(DF_agree$ArticleIssues, DF_agree$year_split, useNA = "ifany")
 ```{r}
 # don't judge me on the loop ok 
 #DF_fix <- import("coder_abritration.xlsx") %>% 
-DF_fix <- import("analysis/coder_abritration.xlsx") %>% 
+DF_fix <- import("../analysis/coder_abritration.xlsx") %>% 
   filter(include == "included") %>% 
   filter(!is.na(corrected_answer))
 
@@ -343,8 +343,6 @@ The following sections are in order of our preregistered plan: https://osf.io/j2
   - Derived from Scopus meta-data
 - Field
   - Derived from Scopus meta-data
-  
-  #####add simple count of how many #####
 
 ```{r}
 #DF$Year[DF$ArticleID == "795dfcd3"] <- 2008
@@ -371,10 +369,13 @@ DF %>%
   - Free text response (multiple responses possible)
   - Additional instructions: "Multiple responses possible. If there are more than 5 languages refer to as  "cross linguistic". If in doubt, refer to as "unclear". If article makes claim about all languages, refer to as "universal"
   
-  #### add output of the raw text #### 
-  #### summarize with graphic #### 
 
 ```{r}
+DF$OriginalArticleLanguage <- DF$ArticleLanguage
+
+# output of original text
+table(DF$OriginalArticleLanguage)
+
 # lower case to normalize
 DF$ArticleLanguage <- tolower(DF$ArticleLanguage)
 # normalizing
@@ -422,10 +423,11 @@ table(langDF$language, langDF$year_split)
 
 # average number of languages
 count_lang <- langDF %>% 
-  group_by(ArticleID) %>% 
+  group_by(ArticleID, year_split) %>% 
   summarize(sample_size = n()) 
 
 describe(count_lang$sample_size)
+describeBy(count_lang$sample_size, count_lang$year_split)
 
 lang_summary <- langDF %>% 
   group_by(language, year_split) %>% summarise(frequency=n()) %>% 
@@ -515,10 +517,8 @@ bar_languages <-
     plot.title.position = "plot"
   )
  
-
+bar_languages
 ```
-
-#####donut chart, word cloud #####
 
 ### JIF 
 
@@ -534,9 +534,10 @@ bar_languages <-
 
 ```{r}
 #JIF <- import("JIF_update.xlsx")
-JIF <- import("analysis/JIF_update.xlsx")
+JIF <- import("../analysis/JIF_update.xlsx")
 # describe jif
 describeBy(as.numeric(JIF$JIF), group = JIF$Year)
+
 
 # enter TR
 JIF_new <- JIF %>%  
@@ -544,6 +545,8 @@ JIF_new <- JIF %>%
   mutate(JIF = as.numeric(JIF),
          JIFYear = as.numeric(JIFYear),
     year_split = ifelse(JIFYear > 2016, "After-OS", "Pre-OS"))
+
+describeBy(as.numeric(JIF_new$JIF), JIF_new$year_split)
 
 # put to top once integrated
 library(ggdist)
@@ -604,6 +607,8 @@ ggplot(JIF_new,
 
 # DF %>% select(JIF, JIFYear, ArticleID, Source.title, Year) %>% 
 #   export(x = ., file = "jif_update.csv", row.names = F)
+
+JIF_plot
 ```
 
 ### Country
@@ -624,8 +629,11 @@ DF$CountryAuthor <- gsub("Republic of South Africa", "South Africa", DF$CountryA
 DF$CountryAuthor <- gsub(", Germany", "", DF$CountryAuthor)
 DF$CountryAuthor <- gsub(", Poland", "", DF$CountryAuthor)
 DF$CountryAuthor <- gsub("Brasil", "Brazil", DF$CountryAuthor)
+DF$CountryAuthor <- gsub("NA", NA, DF$CountryAuthor)
+DF$CountryAuthor <- gsub("Unclear", NA, DF$CountryAuthor)
 
-table(DF$CountryAuthor)
+
+table(DF$CountryAuthor, useNA = "ifany")
 
 DF$CountryCode <- countrycode(sourcevar = DF$CountryAuthor,
                               origin = 'country.name', 
@@ -636,7 +644,13 @@ world_map$region <- iso.alpha(world_map$region)
 
 country_summary <- DF %>% 
       group_by(CountryCode) %>% 
-      summarize(n = n())
+      summarize(n = n()) 
+
+country_summary$Region <- countrycode(
+  sourcevar = country_summary$CountryCode, 
+  origin = 'iso2c', 
+  destination = "un.regionsub.name")
+country_summary$Region[country_summary$CountryCode == "TW"] <- "Eastern Asia"
 
 ggplot(country_summary) +
   geom_map(aes(map_id = CountryCode, fill = n), map = world_map) +
@@ -680,7 +694,7 @@ donut_countries <- ggplot(country_split, aes(x = year_split, y = prop, fill = Co
 # Put JIF and country plot together
 sample_characteristics <- JIF_plot  + bar_languages + plot_layout(widths = c(1, 0.7))
 
-ggsave(filename = "plots/sample_characteristics.png",
+ggsave(filename = "../plots/sample_characteristics.png",
        plot = sample_characteristics,
        device = "png",
        width = 177.8, 
@@ -688,6 +702,34 @@ ggsave(filename = "plots/sample_characteristics.png",
        units = "mm", 
        dpi = 500)
 
+donut_countries
+
+
+country_summary2 <- DF %>% 
+      group_by(CountryCode, year_split) %>% 
+      summarize(n = n()) 
+
+country_summary2$Region <- countrycode(
+  sourcevar = country_summary2$CountryCode, 
+  origin = 'iso2c', 
+  destination = "un.regionsub.name")
+country_summary2$Region[country_summary2$CountryCode == "TW"] <- "Eastern Asia"
+
+country_summary2$year_split <- factor(
+  country_summary2$year_split,
+  levels = c("Pre-OS", "After-OS"))
+
+library(treemapify)
+ggplot(country_summary2 %>% filter(!is.na(Region)), 
+       aes(area = n, fill = CountryCode,
+               label = CountryCode, subgroup = Region)) +
+  geom_treemap() +
+  geom_treemap_subgroup_border(colour = "white", size = 5) +
+  geom_treemap_text(colour = "white", place = "center",
+                    size = 15, grow = FALSE) + 
+  facet_wrap(~year_split) +
+  theme(legend.position = "none")
+  
 ```
 
 ### Study type/design
@@ -698,7 +740,9 @@ ggsave(filename = "plots/sample_characteristics.png",
 
 ```{r}
 DF$StudyType[grepl("^No empirical data", DF$StudyType)] <- "No empirical data"
-table(DF$StudyType)
+table(DF$StudyType, useNA = "ifany")
+
+table(DF$StudyType, DF$year_split, useNA = "ifany")
 ```
 
 ### Type of empirical study
@@ -716,6 +760,7 @@ table(DF$StudyType)
 DF$EmpiricalStudyData <- sub(" with no systematically sampled material, just selected examples ", "", DF$EmpiricalStudyData)
 DF$EmpiricalStudyData <- sub(", Not language per se but report about reading experiences was analysed qualitatively", "", DF$EmpiricalStudyData)
 DF$EmpiricalStudyData <- sub("(only 6 patients, all tested on battery of tasks)", "", DF$EmpiricalStudyData)
+DF$EmpiricalStudyData <- sub("^na$", NA, DF$EmpiricalStudyData)
 DF$EmpiricalStudyData <- trimws(tolower(DF$EmpiricalStudyData))
 
 studyDF <- DF %>% 
@@ -728,7 +773,6 @@ studyDF <- DF %>%
   rename(study = value) %>% 
   filter(study != "")
 
-# these damned "spaces" what a dumb hack
 studyDF$study <- sub("case studies", "case study", studyDF$study)
 studyDF$study <- sub("could be also considered collection of case study.*", "case study", studyDF$study)
 studyDF$study <- sub(" with no systematically sampled material", "", studyDF$study)
@@ -737,12 +781,18 @@ studyDF$study <- gsub("observation.*", "observation", studyDF$study)
 studyDF$study <- gsub("intervention.*", "observation", studyDF$study)
 studyDF$study <- gsub(".*modelling.*", "modelling", studyDF$study)
 studyDF$study <- sub("interviews", "survey or interview", studyDF$study)
+studyDF$study <- sub("description of archive of stuttered speech", "corpus study", studyDF$study)
+studyDF$study <- gsub("correlational study|formal phonology|introspection|just selected examples|case study|meta analysis|modelling|^na$|secondary data from previous reports|simulation|test battery on language   cognitive skills", "other", studyDF$study)
+
+# these damned "spaces" what a dumb hack
 studyDF$study <- gsub("[^[:alnum:]]", "9", studyDF$study)
 studyDF$study <- gsub("^9+(.+)", "\\1", studyDF$study)
 studyDF$study <- gsub("(.+)9+$", "\\1", studyDF$study)
 studyDF$study <- gsub("9", " ", studyDF$study)
 
-table(studyDF$study)
+table(studyDF$study, useNA = "ifany")
+
+table(studyDF$study, studyDF$year_split, useNA = "ifany")
 
 study_summary <- studyDF %>% 
   group_by(study, year_split) %>% summarise(frequency=n()) %>% 
@@ -839,8 +889,10 @@ DF$RawData <- sub(", Survey responses", "", DF$RawData)
 DF$RawData <- sub(", individual examples in article >> text files\\?", "", DF$RawData)
 DF$RawData <- sub(', results of experiment with reaction times >> counts as "text"\\?', "", DF$RawData)
 DF$RawData <- sub(", online corpus", "", DF$RawData)
+DF$RawData <- sub("Unclear", NA, DF$RawData)
+DF$RawData <- sub("Not applicable", NA, DF$RawData)
 
-table(DF$RawData)
+table(DF$RawData, useNA = "ifany")
 
 dataDF <- DF %>% 
   select(RawData, year_split, ArticleID) %>% 
@@ -889,8 +941,13 @@ DF$RawDataAvl <- sub("No statement but links to data sources|Raw data \\(example
 DF$RawDataAvl <- sub(".*third.*", "Yes - Third Party", DF$RawDataAvl)
 DF$RawDataAvl <- sub("State that the data is no longer available", "No, raw data are not available.  (GO TO SECTION 4.6)", DF$RawDataAvl)
 DF$RawDataAvl <- sub("Some raw data available", "Yes, the statement says that the raw data are available.", DF$RawDataAvl)
+DF$RawDataAvl <- sub("No, raw data are not available. \\(GO TO SECTION 4.6\\)", 
+                     "No, raw data are not available.  \\(GO TO SECTION 4.6\\)", 
+                     DF$RawDataAvl)
 
-table(DF$RawDataAvl)
+table(DF$RawDataAvl, useNA = "ifany")
+
+table(DF$RawDataAvl, DF$year_split, useNA = "ifany")
 ```
 
 ### Raw data sharing method
@@ -905,13 +962,15 @@ table(DF$RawDataAvl)
   - Other*
 
 ```{r}
-
 DF$RawDataWhere <- sub("as part of the article \\(individual examples\\)|raw data are available as individual examples in the article", "In Article", DF$RawDataWhere)
 DF$RawDataWhere <- sub("Blog", "Personal or institutional website", DF$RawDataWhere)
 DF$RawDataWhere <- sub(".*corpus.*", "Available from a third party", DF$RawDataWhere)
 DF$RawDataWhere <- sub("Links to online sources, one does not work", "Available from a third party", DF$RawDataWhere)
-table(DF$RawDataWhere)
+DF$RawDataWhere <- sub("^NA$", NA, DF$RawDataWhere)
 
+table(DF$RawDataWhere, useNA = "ifany")
+
+table(DF$RawDataWhere, DF$year_split, useNA = "ifany")
 ```
 
 ### Raw data accessibility
@@ -920,7 +979,9 @@ table(DF$RawDataWhere)
   - Yes / No / Other*
   
 ```{r}
-table(DF$RawDataAccess)
+table(DF$RawDataAccess, useNA = "ifany")
+
+table(DF$RawDataAccess, DF$year_split, useNA = "ifany")
 ```
   
 ### Raw data documentation
@@ -929,13 +990,14 @@ table(DF$RawDataAccess)
   - Yes / No / Unclear / Other*
   
 ```{r}
-table(DF$RawDataDocument)
+table(DF$RawDataDocument, useNA = "ifany")
+
+table(DF$RawDataDocument, DF$year_split, useNA = "ifany")
 ```
 
 ```{r}
-
 # first river plot attempts
-remotes::install_github("corybrunson/ggalluvial", ref = "optimization")
+# remotes::install_github("corybrunson/ggalluvial", ref = "optimization")
 library(ggalluvial)
 library(ggfittext)
 
@@ -984,7 +1046,9 @@ ggplot(data = dummy_df,
 
 ```{r}
 DF$ProcessData <- sub(" \\(GO TO SECTION 5\\)", "", DF$ProcessData)
-table(DF$ProcessData)
+
+table(DF$ProcessData, useNA = "ifany")
+table(DF$ProcessData, DF$year_split, useNA = "ifany")
 ```
 
 ### Processed data sharing method
@@ -999,7 +1063,9 @@ table(DF$ProcessData)
   - Other*
 
 ```{r}
-table(DF$ProcessDataWhere)
+table(DF$ProcessDataWhere, useNA = "ifany")
+
+table(DF$ProcessDataWhere, DF$year_split, useNA = "ifany")
 ```
 
 ### Processed data accessibility
@@ -1008,7 +1074,9 @@ table(DF$ProcessDataWhere)
   - Yes / No / Other*
   
 ```{r}
-table(DF$ProcessDataAccess)
+table(DF$ProcessDataAccess, useNA = "ifany")
+
+table(DF$ProcessDataAccess, DF$year_split, useNA = "ifany")
 ```
 
 ### Processed data documentation
@@ -1017,7 +1085,9 @@ table(DF$ProcessDataAccess)
   - Yes / No / Unclear / Other*
   
 ```{r}
-table(DF$ProcessDataDocument)
+table(DF$ProcessDataDocument, useNA = "ifany")
+
+table(DF$ProcessDataDocument, DF$year_split, useNA = "ifany")
 ```
 
 ## Analysis script sharing
@@ -1036,7 +1106,9 @@ Definition: "Analysis scripts" refers to specification of data preparation and a
 ```{r}
 DF$AnalysisScript <- sub(" \\(GO TO SECTION 6\\)", "", DF$AnalysisScript)
 DF$AnalysisScript <- sub(".*Not applicable.*|The study did not necessitate an analysis script", "Not Applicable", DF$AnalysisScript)
-table(DF$AnalysisScript)
+
+table(DF$AnalysisScript, useNA = "ifany")
+table(DF$AnalysisScript, DF$year_split, useNA = "ifany")
 ```
 
 ### Analysis script sharing method
@@ -1051,7 +1123,9 @@ table(DF$AnalysisScript)
   - Other*
   
 ```{r}
-table(DF$AnalysisScriptWhere)
+table(DF$AnalysisScriptWhere, useNA = "ifany")
+
+table(DF$AnalysisScriptWhere, DF$year_split, useNA = "ifany")
 ```  
 
 ### Analysis script accessibility
@@ -1060,7 +1134,9 @@ table(DF$AnalysisScriptWhere)
   - Yes / No / Other*
 
 ```{r}
-table(DF$AnalysisScriptAccess)
+table(DF$AnalysisScriptAccess, useNA = "ifany")
+
+table(DF$AnalysisScriptAccess, DF$year_split, useNA = "ifany")
 ```
 
 ## Materials / Methods sharing
@@ -1083,7 +1159,9 @@ DF$Materials <- sub(".*Not applicable.*", "Not Applicable", DF$Materials)
 DF$Materials <- sub(".*Supplementary.*|.*Append.*|.*append.*", "Appendix", DF$Materials)
 DF$Materials <- sub(".*third.*|Links to online corpora provided", "Third Party", DF$Materials)
 
-table(DF$Materials)
+table(DF$Materials, useNA = "ifany")
+
+table(DF$Materials, DF$year_split, useNA = "ifany")
 ```
   
 ### Materials sharing method
@@ -1105,7 +1183,8 @@ DF$MaterialsWhere <- sub(".*brok.*|.*dead.*", "Dead Links", DF$MaterialsWhere)
 DF$MaterialsWhere <- sub(".*some materials.*", "Some materials shared", DF$MaterialsWhere)
 DF$MaterialsWhere <- sub(".*Some materials.*|.*Some avail.*", "Some materials shared", DF$MaterialsWhere)
 
-table(DF$MaterialsWhere)
+table(DF$MaterialsWhere, useNA = "ifany")
+table(DF$MaterialsWhere, DF$year_split, useNA = "ifany")
 ```
 
 ### Materials accessibility
@@ -1114,7 +1193,9 @@ table(DF$MaterialsWhere)
   - Yes / No / Other*
   
 ```{r}
-table(DF$MaterialsAccess)
+table(DF$MaterialsAccess, useNA = "ifany")
+
+table(DF$MaterialsAccess, DF$year_split, useNA = "ifany")
 ```
 
 ## Replication
@@ -1130,7 +1211,9 @@ Coder instructions: Search the title and abstract for the phrase "replicat*" (to
   - Other*
   
 ```{r}
-table(DF$Replication)
+table(DF$Replication, useNA = "ifany")
+
+table(DF$Replication, DF$year_split, useNA = "ifany")
 ```
 
 
@@ -1147,7 +1230,9 @@ table(DF$Replication)
   - Other*
   
 ```{r}
-table(DF$COI)
+table(DF$COI, useNA = "ifany")
+
+table(DF$COI, DF$year_split, useNA = "ifany")
 ```
 
 ## Open access
@@ -1163,7 +1248,9 @@ table(DF$COI)
   - Other*
 
 ```{r}
-table(openaccessDF$open_access)
+table(openaccessDF$open_access, useNA = "ifany")
+
+table(openaccessDF$open_access, openaccessDF$year_split, useNA = "ifany")
 ```
 
 ### ideas
