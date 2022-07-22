@@ -13,11 +13,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#####add splits#####
-#####clean up a few things#####
-#####print out the articles that do the thing#####
-
-
 ## Analysis Plan
 
 For each measured variable, we will report raw numbers and percentages in each response category. Additional analyses will be exploratory; we are not conducting confirmatory tests of any a priori hypotheses.
@@ -35,7 +30,6 @@ library(maps)
 library(countrycode)
 library(webr)
 library(patchwork)
-
 ```
 
 ## Get the Data
