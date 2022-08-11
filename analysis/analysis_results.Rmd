@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Analysis Plan
 
-For each measured variable, we will report raw numbers and percentages in each response category. Additional analyses will be exploratory; we are not conducting confirmatory tests of any a priori hypotheses.
+For each measured variable, we will report raw numbers and percentages in each response category. Additional analyses will be exploratory; we are not conducting confirmatory tests of any *a priori* hypotheses.
 
 ## Libraries
 
@@ -58,9 +58,6 @@ colnames(DF) <- c("TimeStamp", "TimeStarted", "DateStarted",
                   "EmpiricalStudyData", "JIFYear")
 
 # list of information from scopus
-#prescreenDF <- import("../Prescreening/prescreening_round1.csv")
-#prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
-
 prescreenDF <- import("../Prescreening/prescreening_round1.csv")
 prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
 
@@ -70,13 +67,9 @@ prescreenDF2 <- import("../data/prescreening_list_2021-07-04.txt")
 prescreenDF$ID[prescreenDF$Title == "Quantified epistemic logics for reasoning about knowledge in multi-agent systems"] <- "e754dd1b"
 
 # import the OA code
-#openaccessDF <- import("OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
 openaccessDF <- import("../analysis/OA_Coding_10_2021.xlsx") %>% select(-`...9`) %>% filter(!is.na(row_num))
 
 # import code on who was doing what to check all are done
-#coder1 <- import("../data/randomized_prescreen_df_2021_10_21.csv")
-#coder2 <- import("../data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
-
 coder1 <- import("../data/randomized_prescreen_df_2021_10_21.csv")
 coder2 <- import("../data/randomized_prescreen_df_rnd2_2022_03_14.csv") 
 ```
@@ -185,6 +178,7 @@ DF <- DF %>% left_join(
 Figure out what to check and export that file for the second coding check. 
 
 ```{r}
+# find articles that were coded for round two for a double check 
 DF_Second <- DF %>% 
       filter(!is.na(round2_coder)) %>% 
       select(-c(TimeStamp, TimeStarted, DateStarted, OA,
@@ -205,14 +199,12 @@ DF_Second <- DF %>%
   # filter(easy_screen == F) %>% 
   # mutate(check = rep(c("EB", "KC", "IC", "CH"), length.out = nrow(.)))
 
-#export(DF_Second, "second_coder_check.csv", row.names = F)
 export(DF_Second, "../analysis/second_coder_check.csv", row.names = F)
-
 ```
 
 Import and examine the results from the second coding check. 
 
-First, EMB noticed that she did not print out the article mismatches for review that had one NA value and one real value, which would generally be a mismatch. Given the group discussion described below and a few apparent miscodings, EMB recoded all the mismatches as described: (note that the original coding is avaliable in the excel document imported below second_coder_done.xlsx on a second sheet)
+First, EMB noticed that she did not print out the article mismatches for review that had one NA value and one real value, which would generally be a mismatch. Given the group discussion described below and a few apparent miscodings, EMB recoded all the mismatches as described: (note that the original coding is available in the excel document imported below `second_coder_done.xlsx` on a second sheet)
 
 - The "unclear" category was added to indicate it was unclear if it was a mismatch because the person may have skipped answering these questions if they did not think the article was about language or did not have access. Therefore, all articles with one coder NA value and one coder real text was coded as Unclear.
 - A not available and not applicable was coded as a match.
@@ -221,10 +213,10 @@ First, EMB noticed that she did not print out the article mismatches for review 
 We also separately coded JIF because only a few members had access to the information in a specialized database. 
 
 ```{r}
-#DF_Second_import <- import("second_coder_done.xlsx")
+# import the second coder information EMB coded
 DF_Second_import <- import("../analysis/second_coder_done.xlsx")
 
-
+# create a dataset of second matches to examine 
 DF_Second_match <- DF %>% filter(!is.na(round2_coder)) %>% 
   select(-c(TimeStamp, TimeStarted, DateStarted, OA, 
             TimeEnded, DateEnded, Year, year_split, clickable_doi, 
@@ -256,7 +248,7 @@ table(DF_Second_match$answer,
       useNA = "ifany") / 120 * 100
 ```
 
-Overall these results indicate a need to examine:
+Overall these results indicated a need to examine:
 
 - Articles Issues (this was true before recoding)
 - JIF was recoded (see below)
@@ -266,7 +258,7 @@ In a group discussion, we first discovered that the "mismatches" were often from
 Since the goal was to reach 250 articles in each pre and post era, we excluded all articles that were a mismatch because of these two issues (did not have access, article about language). We then recalculated the agreement statistics for the double coded articles in which both articles were actually coded. 
 
 ```{r}
-# print out articles that match 
+# find articles that match 
 agree_list <- DF_Second_match %>% 
   filter(answer == TRUE) %>% 
   filter(name == "ArticleIssues") %>% 
@@ -296,10 +288,14 @@ DF <- DF %>% filter(TimeStamp < as.POSIXct("2022-03-14"))
 table(DF$ArticleIssues, DF$year_split, useNA = "ifany")
 
 # table of double match
-  #grab all articles that weren't double coded
-  not_double <- DF %>% filter(!(ArticleID %in% DF_Second_match$ArticleID)) %>% pull(ArticleID)
+# grab all articles that weren't double coded
+not_double <- DF %>% filter(!(ArticleID %in% DF_Second_match$ArticleID)) %>% pull(ArticleID)
 
+# only articles that we did not double code and ones we did 
+# double code and agreed should be included
 DF_agree <- DF %>% filter(ArticleID %in% c(not_double, agree_list))
+
+# did we meet our goal of at least 250? 
 table(DF_agree$ArticleIssues, DF_agree$year_split, useNA = "ifany")
 ```
 
@@ -307,11 +303,13 @@ table(DF_agree$ArticleIssues, DF_agree$year_split, useNA = "ifany")
 
 ```{r}
 # don't judge me on the loop ok 
-#DF_fix <- import("coder_abritration.xlsx") %>% 
+# import answers we should fix 
 DF_fix <- import("../analysis/coder_abritration.xlsx") %>% 
   filter(include == "included") %>% 
   filter(!is.na(corrected_answer))
 
+# loop over and fix those answers - basically merging answers as 
+# we found that things mostly needed to be merged together 
 for (i in 1:nrow(DF_fix)){
   DF_agree[
     DF_agree$ArticleID == DF_fix$ArticleID[i], # article match 
