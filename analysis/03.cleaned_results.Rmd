@@ -22,13 +22,13 @@ library(countrycode)
 library(webr)
 library(patchwork)
 library(papaja)
+library(RColorBrewer)
 library(ggdist)
-library(cowplot)
+
 
 # define handy function 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 ```
-
 
 ```{r data_imports}
 DF <- import("02.data_typofixes.csv")
@@ -50,7 +50,7 @@ reasons_excluded <- table(DF$ArticleIssues, DF$Agree)
 total_excluded <- sum(reasons_excluded[ , 1]) + sum(reasons_excluded[1:3, 2])
 ```
 
-Sample characteristics for all `r sample_size` articles are displayed in Table 1 and Figure 1. `r total_excluded` (`r round(total_excluded/sample_size*100, 1)`%) Articles were excluded due to not being in English (`r round(sum(reasons_excluded[2, ])/sample_size*100, 1)`%), not being about language according to our definition above (`r round(sum(reasons_excluded[1, ])/sample_size*100, 1)`%), not being accessible (`r round(sum(reasons_excluded[3, ])/sample_size*100, 1)`%) or other reasons (`r round(reasons_excluded[4, 1]/sample_size*100, 1)`%). 
+Sample characteristics for all `r sample_size` articles are displayed in Table 1 and Figure 1. `r total_excluded` (`r round(total_excluded/sample_size*100, 1)`%) Articles were excluded due to not being in English (`r round(sum(reasons_excluded[2, ])/sample_size*100, 1)`%), not being about language according to our definition above (`r round(sum(reasons_excluded[1, ])/sample_size*100, 1)`%), not being accessible (`r round(sum(reasons_excluded[3, ])/sample_size*100, 1)`%) or other reasons (`r round(reasons_excluded[4, 1]/sample_size*100, 1)`%).
 
 ```{r code-language}
 # lower case to normalize
@@ -124,21 +124,17 @@ freq_split <- lang_summary_all %>%
   arrange(desc(prop)) %>%
   ungroup()
 
-# colors for graph 
-colors_lang <- c("#8dd3c7",
-                "#ffffb3",
-                "#bebada",
-                "#fb8072",
-                "#80b1d3",
-                "#fdb462",
-                "#b3de69")
-
 # make pretty for graph
 freq_split$language_new <- factor(freq_split$language_new,
-                levels = c("Chinese", "German", 
+                levels = c("Other", "Chinese", "German", 
                            "Spanish", "Cross Linguistic", 
-                           "Universal", "Other",
-                           "English"))
+                           "Universal", "English"))
+
+# rearrange pos
+freq_split <- freq_split %>% 
+  arrange(desc(language_new)) %>% 
+  group_by(year_split) %>% 
+  mutate(pos = cumsum(prop)-.5*(prop))
 
 # make the graph 
 bar_languages <- 
@@ -150,17 +146,16 @@ bar_languages <-
            position = position_stack()) +
   geom_text(data = freq_split[freq_split$language_new %in% c("English", "Other", "Universal"),],
             aes(x = year_split,
-                y = prop,
-                label = paste0(prop, "%")),
-            position = position_stack(vjust = 0.5)) +
+                y = pos,
+                label = paste0(prop, "%"))) + 
   labs(title = "B: Languages Sampled",
        x = "",
        y = "") + 
   scale_x_discrete(limits = c("Pre-OS","After-OS")) +
-  scale_y_continuous(breaks = c(0,25,50,75,100), 
+  scale_y_continuous(breaks = c(0, 25, 50, 75, 100), 
                      labels = c("0%", "25%", "50%", "75%", "100%")) + 
   guides(fill = guide_legend(title="Target Language(s)")) +
-  scale_fill_viridis_d() +
+  scale_fill_brewer(palette="BrBG") + 
   theme_minimal() +
   theme(
     legend.position = "right",
@@ -168,44 +163,68 @@ bar_languages <-
                                        size = 14),
     plot.subtitle = element_text(size = 12),
     plot.title.position = "plot"
-  )
+  ) 
 ```
 
 ```{r code-country}
 # fix up typos
 DF$CountryAuthor[DF$CountryAuthor == ""] <- NA
 
-# TR enters ;) UK, USA, Australia, Germany, China, Netherlands, Spain
-# create summary 
-country_summary_new <- DF %>% 
-   mutate(CountryAuthor_new = ifelse(CountryAuthor %!in% c("UK", "USA", "Australia", "Germany", "China", "Netherlands", "Spain"), "Other", CountryAuthor)) %>% 
-      group_by(CountryAuthor_new, year_split) %>% 
-      summarize(frequency = n(), .groups = "keep") %>% 
-      ungroup()
+# do country regions
+DF$CountryCode <- countrycode(sourcevar = DF$CountryAuthor,
+                              origin = 'country.name', 
+                              destination = 'un.regionsub.name')
+DF$CountryCode[is.na(DF$CountryCode)] <- "Unknown"
 
-# split into year summaries   
-country_split <- country_summary_new %>% 
+DF$CountryCode[DF$CountryAuthor == "Taiwan"] <- "Eastern Asia"
+
+DF$CountryCode2 <- DF$CountryCode
+DF$CountryCode2 <- gsub(".* Asia.*", "Asia", DF$CountryCode2)
+DF$CountryCode2 <- gsub("Melanesia|.*Africa.*|.*Latin America.*", "Other", DF$CountryCode2)
+
+DF$CountryCode2 <- 
+  factor(DF$CountryCode2, 
+         levels = c("Unknown", "Other", "Eastern Europe", 
+                    "Australia and New Zealand", "Southern Europe",  
+                     "Western Europe", "Northern Europe", "Asia", 
+                    "Northern America"))
+
+country_summary <- DF %>% 
+      group_by(year_split, CountryCode2) %>% 
+      summarize(n = n(), .groups = "keep") %>% 
   group_by(year_split) %>% 
-  summarise(frequency_split = sum(frequency), .groups = "keep") %>% 
-  full_join(country_summary_new) %>% 
-  mutate(prop = round(frequency / frequency_split, 3) * 100)
-
-# create donut plot of countries 
-donut_countries <- ggplot(country_split, aes(x = year_split, y = prop, fill = CountryAuthor_new)) +
-  geom_col() +
-  coord_polar("y") +
+  mutate(prop = round(n / sum(n)*100, 1)) %>% 
+  arrange(desc(CountryCode2)) %>% 
+  mutate(pos = cumsum(prop)-.5*(prop))
+  
+# create bar plot of countries 
+bar_countries <- 
+  ggplot(country_summary, aes(x = year_split, 
+                         y =  prop, 
+                         fill = CountryCode2)) +
+  geom_bar(stat = "identity",
+           #col = "black",
+           position = position_stack()) +
+  geom_text(data = country_summary[country_summary$CountryCode2 %in% c("Northern America", "Northern Europe", "Asia", "Western Europe"),],
+            aes(x = year_split,
+                y = pos,
+                label = paste0(prop, "%"))) + 
   labs(title = "A: Author Affiliation",
-       subtitle = "Pre-OS Inner \nAfter-OS Outer") + 
-  scale_x_discrete(limits = c(" ", "Pre-OS","After-OS")) +
+       x = "",
+       y = "") + 
+  scale_x_discrete(limits = c("Pre-OS","After-OS")) +
+  scale_y_continuous(breaks = c(0, 25, 50, 75, 100), 
+                     labels = c("0%", "25%", "50%", "75%", "100%")) + 
   guides(fill = guide_legend(title="Country")) +
-  theme_void() +
-  scale_fill_viridis_d() +
+  scale_fill_brewer(palette="BrBG") + 
+  theme_minimal() +
   theme(
+    legend.position = "right",
     plot.title = element_text(face = "bold",
                                        size = 14),
     plot.subtitle = element_text(size = 12),
     plot.title.position = "plot"
-  )
+  ) 
 ```
 
 ```{r code-JIF}
@@ -292,24 +311,17 @@ DF$EmpiricalStudyData <- gsub("^formal|modelling|^test battery.+|introspection",
 DF$EmpiricalStudyData <- gsub("phonology|multiple study types reported|computational|study|with no systematically sampled material, just selected examples|simulation|could be .+|corpus|not language per se.+|-analysis|analysis", "", DF$EmpiricalStudyData)
 DF$EmpiricalStudyData <- trimws(DF$EmpiricalStudyData)
 
-DF$EmpiricalStudyData <- gsub(", Primary, Primary|Primary, Primary", "Primary", DF$EmpiricalStudyData)
-DF$EmpiricalStudyData <- gsub("Primary Secondary|SecondaryPrimary|Secondary, Primary, Secondary", "Primary, Secondary", DF$EmpiricalStudyData)
-DF$EmpiricalStudyData <- gsub("Secondary, Secondary", "Secondary", DF$EmpiricalStudyData)
+DF$EmpiricalStudyData <- gsub(".*Primary.*", "Primary", DF$EmpiricalStudyData)
+DF$EmpiricalStudyData <- gsub(".*Secondary.*", "Secondary", DF$EmpiricalStudyData)
 DF$EmpiricalStudyData <- gsub(",|  ", " ", DF$EmpiricalStudyData)
-
-# trim one more time
-DF$EmpiricalStudyData <- trimws(DF$EmpiricalStudyData)
-
-# collapse together
-DF$EmpiricalStudyData_collapse <- DF$EmpiricalStudyData
-DF$EmpiricalStudyData_collapse <- gsub("Primary  Other|Primary  Secondary|Secondary  Other|Secondary  Primary|Other", "Multiple or Other", DF$EmpiricalStudyData_collapse)
 ```
 
 ```{r create-final-DF}
-# filter down to only articles to include
+# filter down to only articles to include because of coding
+#### created filtered data that is what we coded ----
 DF_filtered <- DF %>% 
   filter(ArticleIssues == "There are no issues") %>% 
-  filter(Agree == TRUE)
+  filter(Agree == TRUE) 
 ```
 
 ```{r table1, results = 'asis', include = TRUE, echo = FALSE}
@@ -323,21 +335,22 @@ table1 <- data.frame(
                "Study Design - Meta-Analysis",
                "Study Data - Primary",
                "Study Data - Secondary",
-               "Study Data - Multiple/Other"), 
+               "Study Data - Other"), 
   ## total stats
   "Total" = c(
     nrow(DF), 
     nrow(DF_filtered),
     length(unique(DF$Source.title)), 
     length(unique(langDF$language)),
-    paste(round(mean(JIF_new$JIF), 2), " (", round(sd(JIF_new$JIF), 2), ")", sep = ""),
+    paste(round(mean(JIF_new$JIF), 2), " (", round(sd(JIF_new$JIF), 2), ") ", 
+          "Mdn = ", round(median(JIF_new$JIF),2), sep = ""),
     length(unique(DF$CountryAuthor)),
     sum(grepl("^Empirical", DF$StudyType)), 
     sum(grepl("^No empirical", DF$StudyType)), 
     sum(grepl("^Data", DF$StudyType)),
-    sum(grepl("^Primary", DF$EmpiricalStudyData_collapse)), 
-    sum(grepl("^Second", DF$EmpiricalStudyData_collapse)), 
-    sum(grepl("^Multiple", DF$EmpiricalStudyData_collapse))
+    sum(grepl("^Primary", DF$EmpiricalStudyData)), 
+    sum(grepl("^Second", DF$EmpiricalStudyData)), 
+    sum(grepl("^Other", DF$EmpiricalStudyData))
     ),
   ## pre stats 
   "Pre-OS" = c(
@@ -345,14 +358,15 @@ table1 <- data.frame(
     nrow(DF_filtered %>% filter(year_split == "Pre-OS")), 
     length(unique(DF$Source.title[DF$year_split == "Pre-OS"])),
     length(unique(langDF$language[langDF$year_split == "Pre-OS"])),
-    paste(round(mean(JIF_new$JIF[JIF_new$year_split == "Pre-OS"]), 2), " (", round(sd(JIF_new$JIF[JIF_new$year_split == "Pre-OS"]), 2), ")", sep = ""),
+    paste(round(mean(JIF_new$JIF[JIF_new$year_split == "Pre-OS"]), 2), " (", round(sd(JIF_new$JIF[JIF_new$year_split == "Pre-OS"]), 2), ") ", 
+          "Mdn = ", round(median(JIF_new$JIF[JIF_new$year_split == "Pre-OS"]),2), sep = ""),
     length(unique(DF$CountryAuthor[DF$year_split == "Pre-OS"])),
     sum(grepl("^Empirical", DF$StudyType[DF$year_split == "Pre-OS"])), 
     sum(grepl("^No empirical", DF$StudyType[DF$year_split == "Pre-OS"])), 
     sum(grepl("^Data", DF$StudyType[DF$year_split == "Pre-OS"])),
-    sum(grepl("^Primary", DF$EmpiricalStudyData_collapse[DF$year_split == "Pre-OS"])), 
-    sum(grepl("^Second", DF$EmpiricalStudyData_collapse[DF$year_split == "Pre-OS"])), 
-    sum(grepl("^Multiple", DF$EmpiricalStudyData_collapse[DF$year_split == "Pre-OS"]))
+    sum(grepl("^Primary", DF$EmpiricalStudyData[DF$year_split == "Pre-OS"])), 
+    sum(grepl("^Second", DF$EmpiricalStudyData[DF$year_split == "Pre-OS"])), 
+    sum(grepl("^Other", DF$EmpiricalStudyData[DF$year_split == "Pre-OS"]))
     ),
   
   ## post stats 
@@ -361,32 +375,31 @@ table1 <- data.frame(
      nrow(DF_filtered %>% filter(year_split == "After-OS")),
      length(unique(DF$Source.title[DF$year_split == "After-OS"])),
      length(unique(langDF$language[langDF$year_split == "After-OS"])),
-     paste(round(mean(JIF_new$JIF[JIF_new$year_split == "After-OS"]), 2), " (", round(sd(JIF_new$JIF[JIF_new$year_split == "After-OS"]), 2), ")", sep = ""),
+     paste(round(mean(JIF_new$JIF[JIF_new$year_split == "After-OS"]), 2), " (", round(sd(JIF_new$JIF[JIF_new$year_split == "After-OS"]), 2), ") ", 
+          "Mdn = ", round(median(JIF_new$JIF[JIF_new$year_split == "After-OS"]),2), sep = ""),
      length(unique(DF$CountryAuthor[DF$year_split == "After-OS"])),
      sum(grepl("^Empirical", DF$StudyType[DF$year_split == "After-OS"])), 
      sum(grepl("^No empirical", DF$StudyType[DF$year_split == "After-OS"])), 
      sum(grepl("^Data", DF$StudyType[DF$year_split == "After-OS"])),
-     sum(grepl("^Primary", DF$EmpiricalStudyData_collapse[DF$year_split == "After-OS"])), 
-     sum(grepl("^Second", DF$EmpiricalStudyData_collapse[DF$year_split == "After-OS"])), 
-     sum(grepl("^Multiple", DF$EmpiricalStudyData_collapse[DF$year_split == "After-OS"]))
+     sum(grepl("^Primary", DF$EmpiricalStudyData[DF$year_split == "After-OS"])), 
+     sum(grepl("^Second", DF$EmpiricalStudyData[DF$year_split == "After-OS"])), 
+     sum(grepl("^Other", DF$EmpiricalStudyData[DF$year_split == "After-OS"]))
      )
 )
 
 apa_table(table1, 
           caption = "Sample Study Characteristics",
-          note = "All values are raw counts on the original sample size, except JIF which represents the mean and standard deviation.")
+          note = "All values are raw counts on the original sample size, except JIF which represents the mean and standard deviation. Empirical study data type was categorized after examination of the results.")
 ```
 
 ```{r figure1, echo = FALSE, include = TRUE, fig.cap = "Figure 1. A: The proportion of first author affiliation's country collapsing all small categories into other. B: The proportion of languages examined in these studies collapsing all other languages together. Cross Linguistic samples represented studies with five or more languages."}
 # figure 1 
-plot_grid(donut_countries, bar_languages,
-          nrow = 1, 
-          ncol = 2)
+bar_countries  + bar_languages + plot_layout(widths = c(1.25, 1.25))
 ```
 
 While the difference between articles published in our early and our late time window have similar sample properties, there are general noteworthy asymmetries in our sample. First and foremost, we notice a very strong anglocentric bias for both the host country of the corresponding author and the language under investigation, as shown in Figure 1. A large portion of studies are conducted with first author affiliations in the United States, United Kingdom, or Europe, and the primary language under investigation is English. While these properties may be tied to the sampling of English-written articles, these asymmetries quantify often articulated concerns that claims about human language are too often based on a small set of languages, limiting their generalisability (e.g. Majid & Levinson 2010, Goddard & Wierzbicka 2014, Levisen 2018). COMMENT ON LACK OF DIVERSITY IN RESEARCH CULTURE AND ORIGINS.
 
-Linguistics is a multidisciplinary field with many different empirical traditions. Our sample contained a wide variety of study types which we tried to categorize into three categories (empirical data, no empirical data, meta-analysis). From these categories, we attempted to label empirical data into seven proposed categories. Coding of these categories was often difficult due to a lack of clear-cut definitions between them. In order to describe the patterns observed in a digestible way, we will subsume study types into three super categories that are defined by the relationship between the data and the analysis: 1) Primary data defined as data collected during the study (including experimental studies, observational studies, correlational studies, field studies or language description, case studies, surveys, and interviews), 2) Secondary data defined as data from previous data collections or reanalysis (including corpus studies, descriptions of archives, discourse analyses, secondary data analyses from published data, typological studies), and 3) Other category which does not fit the former two definitions and for which most coded measures are irrelevant (modeling, simulations, introspections, formal linguistic analyses). After coding these values, we found very few Other category articles, but several articles that included multiple types of data. In order to ensure that count values were represented only once in the follow descriptions, the Other category was merged with studies that included multiple types of data. These counts can be found in Table 1.   
+Linguistics is a multidisciplinary field with many different empirical traditions. Our sample contained a wide variety of study types which we tried to categorize into three categories (empirical data, no empirical data, meta-analysis). From these categories, we attempted to label empirical data into seven proposed categories. Coding of these categories was often difficult due to a lack of clear-cut definitions between them. In order to describe the patterns observed in a digestible way, we will subsume study types into three super categories that are defined by the relationship between the data and the analysis: 1) Primary data defined as data collected during the study (including experimental studies, observational studies, correlational studies, field studies or language description, case studies, surveys, and interviews), 2) Secondary data defined as data from previous data collections or reanalysis (including corpus studies, descriptions of archives, discourse analyses, secondary data analyses from published data, typological studies), and 3) Other category which does not fit the former two definitions and for which most coded measures are irrelevant (modeling, simulations, introspections, formal linguistic analyses). After coding these values, we found very few Other category articles, but several articles that included multiple types of data. In order to ensure that count values were represented only once in the following descriptions, each was coded as Primary if it contained any Primary data, Secondary if it was coded as Secondary and Other, and Other was reserved for studies with only Other data. These counts can be found in Table 1. The Other category was excluded for analyses below that focused on primary and secondary data. 
 
 ## 3.2 Article availability (open access)
 
@@ -405,115 +418,237 @@ openaccessDF$ID <- stri_replace_all_regex(str = openaccessDF$ID,
                              replacement = A_ID_fixed,
                              vectorize_all = FALSE)
 
+#### created filtered data that is only primary and secondary ----
+DF_filtered_ps <- DF_filtered %>% 
+  filter(EmpiricalStudyData != "Other")
 
 openaccessDF_filtered <- openaccessDF %>% 
-  filter(ID %in% DF_filtered$ArticleID)
+  filter(ID %in% DF_filtered_ps$ArticleID)
 ```
 
-
-Among the `r nrow(DF_filtered)` eligible articles, we obtained a publicly available version for `r sum(openaccessDF_filtered$open_access == "yes")` (`r round(sum(openaccessDF_filtered$open_access == "yes")/nrow(openaccessDF_filtered)*100, 1)`%), whereas `r sum(openaccessDF_filtered$open_access == "no")` (`r round(sum(openaccessDF_filtered$open_access == "no")/nrow(openaccessDF_filtered)*100, 1)`%) were only accessible through a paywall. `r sum(openaccessDF_filtered$open_access == "unknown")` (`r round(sum(openaccessDF_filtered$open_access == "unknown")/nrow(openaccessDF_filtered)*100, 1)`%) articles were not available at all.
+Among the `r nrow(DF_filtered_ps)` eligible empirical study data articles (primary and secondary), we obtained a publicly available version for `r sum(openaccessDF_filtered$open_access == "yes")` (`r round(sum(openaccessDF_filtered$open_access == "yes")/nrow(openaccessDF_filtered)*100, 1)`%), whereas `r sum(openaccessDF_filtered$open_access == "no")` (`r round(sum(openaccessDF_filtered$open_access == "no")/nrow(openaccessDF_filtered)*100, 1)`%) were only accessible through a paywall. `r sum(openaccessDF_filtered$open_access == "unknown")` (`r round(sum(openaccessDF_filtered$open_access == "unknown")/nrow(openaccessDF_filtered)*100, 1)`%) articles were not available at all.
 
 ## 3.3 Materials availability
 
 ```{r code-materials}
-# clean up materials
-DF_filtered$Materials[DF_filtered$Materials == ""] <- NA
-DF_filtered$Materials <- sub(".*dead.*", "Yes, materials or additional information about the method are freely available", DF_filtered$Materials)
-DF_filtered$Materials <- sub(" \\(GO TO SECTION 7\\)", "", DF_filtered$Materials)
-DF_filtered$Materials <- sub(".*Not applicable.*", NA, DF_filtered$Materials)
-DF_filtered$Materials <- sub(".*Supplementary.*|.*Append.*|.*append.*|.+supplementary.+", "Yes, materials or additional information about the method are freely available
-", DF_filtered$Materials)
-DF_filtered$Materials <- sub(".*third.*|Links to online corpora provided", "Yes, materials or additional information about the method are freely available", DF_filtered$Materials)
-DF_filtered$Materials <- trimws(DF_filtered$Materials)
+# clean up materials only primary and secondary 
+DF_filtered_ps$Materials[DF_filtered_ps$Materials == ""] <- NA
+DF_filtered_ps$Materials <- sub(".*dead.*", "Yes, materials or additional information about the method are freely available", DF_filtered_ps$Materials)
+DF_filtered_ps$Materials <- sub(" \\(GO TO SECTION 7\\)", "", DF_filtered_ps$Materials)
+DF_filtered_ps$Materials <- sub(".*Not applicable.*", NA, DF_filtered_ps$Materials)
+DF_filtered_ps$Materials <- sub(".*Supplementary.*|.*Append.*|.*append.*|.+supplementary.+", "Yes, materials or additional information about the method are freely available
+", DF_filtered_ps$Materials)
+DF_filtered_ps$Materials <- sub(".*third.*|Links to online corpora provided", "Yes, materials or additional information about the method are freely available", DF_filtered_ps$Materials)
+DF_filtered_ps$Materials <- trimws(DF_filtered_ps$Materials)
 
-DF_filtered$Materials <- factor(DF_filtered$Materials,
-                                levels = names(table(DF_filtered$Materials)), 
+DF_filtered_ps$Materials <- factor(DF_filtered_ps$Materials,
+                                levels = names(table(DF_filtered_ps$Materials)), 
                                 labels = c("Not Avaliable", "Avaliable"))
 
 # clean up where 
-DF_filtered$MaterialsWhere[DF_filtered$MaterialsWhere == ""] <- NA
-DF_filtered$MaterialsWhere <- gsub(".*brok.*|.*dead.*|Dead.*|.*porn.*", "Dead Links", DF_filtered$MaterialsWhere)
-DF_filtered$MaterialsWhere <- gsub(".*Suppl.*", "Supplement", DF_filtered$MaterialsWhere)
-DF_filtered$MaterialsWhere <- gsub(".*append.*|.*Append.*|In the actual article", "Appendix", DF_filtered$MaterialsWhere)
-DF_filtered$MaterialsWhere <- gsub(".*third.*", "Third-Party", DF_filtered$MaterialsWhere)
-DF_filtered$MaterialsWhere <- gsub(".*some materials.*|.*Some materials.*|.*Some avail.*", "Partial Materials", DF_filtered$MaterialsWhere)
-DF_filtered$MaterialsWhere <- gsub("Authors state materials.*|Upon request.*", "Other", DF_filtered$MaterialsWhere)
-DF_filtered$MaterialsWhere <- gsub("Personal or institutional website", "Website", DF_filtered$MaterialsWhere)
+DF_filtered_ps$MaterialsWhere[DF_filtered_ps$MaterialsWhere == ""] <- NA
+DF_filtered_ps$MaterialsWhere <- gsub(".*brok.*|.*dead.*|Dead.*|.*porn.*", "Dead Links", DF_filtered_ps$MaterialsWhere)
+DF_filtered_ps$MaterialsWhere <- gsub(".*Suppl.*", "Supplement", DF_filtered_ps$MaterialsWhere)
+DF_filtered_ps$MaterialsWhere <- gsub(".*append.*|.*Append.*|In the actual article", "Appendix", DF_filtered_ps$MaterialsWhere)
+DF_filtered_ps$MaterialsWhere <- gsub(".*third.*", "Third-Party", DF_filtered_ps$MaterialsWhere)
+DF_filtered_ps$MaterialsWhere <- gsub(".*some materials.*|.*Some materials.*|.*Some avail.*", "Partial Materials", DF_filtered_ps$MaterialsWhere)
+DF_filtered_ps$MaterialsWhere <- gsub("Authors state materials.*|Upon request.*", "Other", DF_filtered_ps$MaterialsWhere)
+DF_filtered_ps$MaterialsWhere <- gsub("Personal or institutional website", "Website", DF_filtered_ps$MaterialsWhere)
+
+# summarize materials 
+materials_graph <- DF_filtered_ps %>% 
+  filter(!is.na(Materials)) %>% 
+  group_by(year_split, EmpiricalStudyData, Materials) %>% 
+  summarize(n = n(), .groups = "keep") %>% 
+  group_by(year_split, EmpiricalStudyData) %>% 
+  mutate(prop = round(n / sum(n)*100, 1)) 
+
+materials_access <- DF_filtered_ps %>% 
+  filter(!is.na(Materials)) %>% 
+  group_by(year_split, EmpiricalStudyData, Materials) %>% 
+  summarize(n = n(), .groups = "keep") %>% 
+  group_by(year_split, EmpiricalStudyData) %>% 
+  mutate(prop = round(n / sum(n)*100, 1)) %>% 
+  filter(Materials == "Avaliable")
+
+materials_where <- DF_filtered_ps %>% 
+  filter(Materials == "Avaliable") %>% 
+  group_by(MaterialsWhere) %>% 
+  summarize(n = n()) %>% 
+  mutate(prop = round(n / sum(n)*100, 1))
 ```
 
-Data for articles containing primary and secondary data are visualized in Figure X-B. Of those articles published in 2008/2009 and involving primary data, ## (##%) contained a statement or link regarding the availability of original research materials such as survey instruments, software, or stimuli. Of those articles involving secondary data, ## articles contained such a statement or link (##%). Of those articles published in 2018/2019 and involving primary data, ## (##%) contained such a statement or link. Of those articles involving secondary data, ## articles contained such a statement or link (##%).
- 
-For the ## articles for which materials were reportedly available, the materials were not actually available for ## articles because of broken links. For the ## articles that we could access, the materials were made available in the article itself (e.g., in a table or appendix; n = #), in a journal-hosted supplement (n = #), on a personal or institutionally hosted (nonrepository) webpage (n = #), or in an online third-party repository (n = #).
+Data for articles containing primary and secondary data are visualized in Figure 2. Of those articles published in 2008/2009 and involving primary data, `r materials_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Primary") %>% pull(n)` (`r materials_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Primary") %>% pull(prop)`%) contained a statement or link regarding the availability of original research materials such as survey instruments, software, or stimuli. Of those articles involving secondary data, `r materials_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Secondary") %>% pull(n)` (`r materials_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Secondary") %>% pull(prop)`%) articles contained such a statement or link. Of those articles published in 2018/2019 and involving primary data, `r materials_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Primary") %>% pull(n)` (`r materials_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Primary") %>% pull(prop)`%) contained such a statement or link. Of those articles involving secondary data, `r materials_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Secondary") %>% pull(n)` (`r materials_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Secondary") %>% pull(prop)`%) articles contained such a statement or link.
 
-```{r figure2, include = TRUE}
-# reorder pre and post
-DF_filtered$year_split <- factor(DF_filtered$year_split, 
-                                 levels = c("Pre-OS", "After-OS"))
+For the `r sum(materials_where$n)` articles for which materials were reportedly available, the materials were not actually available for `r materials_where %>% filter(MaterialsWhere == "Dead Links") %>% pull(n)` articles because of broken links. For the `r sum(materials_where$n) - materials_where %>% filter(MaterialsWhere == "Dead Links") %>% pull(n)` articles that we could access, the materials were made available in the article itself (e.g., in a table or appendix; n = `r materials_where %>% filter(MaterialsWhere == "Appendix") %>% pull(n)`), in a journal-hosted supplement (n = `r materials_where %>% filter(MaterialsWhere == "Supplement") %>% pull(n)`), on a personal or institutionally hosted (nonrepository) webpage (n = `r materials_where %>% filter(MaterialsWhere == "Website") %>% pull(n)`), or in an online third-party repository (n = `r materials_where %>% filter(MaterialsWhere == "Third-Party") %>% pull(n)`). All other materials locations were coded as other. 
 
-materials_nums <- DF_filtered %>% 
-  filter(!is.na(Materials)) %>% 
-  group_by(year_split, EmpiricalStudyData_collapse, Materials) %>% 
-  summarize(n = n(), .groups = "keep")
+## 3.4 Data availability
 
-ggplot(na.omit(materials_nums), aes(EmpiricalStudyData_collapse, n, fill = Materials)) + 
-  geom_bar(stat = "identity", position = "stack", color = "black") + 
-  theme_classic() + 
-  facet_wrap(~year_split) +
-  geom_text(aes(x = EmpiricalStudyData_collapse,
-                y = n,
-                label = n),
-            position = position_stack(vjust = 0.5)) +
-  coord_flip()
+### Raw data
 
-materials2_nums <- DF_filtered %>% 
-  filter(Materials == "Avaliable") %>% 
-  group_by(year_split, EmpiricalStudyData_collapse, MaterialsWhere) %>% 
-  summarize(n = n(), .groups = "keep")
+```{r code-rawdata}
+# clean up raw data
+DF_filtered_ps$RawData[DF_filtered_ps$RawData == ""] <- NA
+DF_filtered_ps$RawData <- sub("Individual examples of linguistic phenomenon >> text files\\?", "Text file", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub("Not applicable, Examples of analyzed sentences provided in article text", "Not applicable", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub("Not applicable, Examples of sentences in text \\(syntactic analysis\\)", "Not applicable", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub('^survey results.*', "Text file", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub("single examples", "Text file", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub(", Answers obtained from stimuli items", "", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub(", Survey responses", "", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub(", individual examples in article >> text files\\?", "", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub(', results of experiment with reaction times.*', "", DF_filtered_ps$RawData)
+DF_filtered_ps$RawData <- sub(", online corpus", "", DF_filtered_ps$RawData)
 
-library(ggpubr)
-materialsDF <- bind_rows(
-  materials_nums %>% 
+# create a dataframe of long format
+dataDF <- DF_filtered_ps %>% 
+  select(RawData, year_split, ArticleID, EmpiricalStudyData) %>% 
+  separate(RawData, sep = ",", into = c("A", "B", "C"), 
+           extra = "warn") %>% 
+  pivot_longer(cols = c(A,B, C)) %>% 
+  filter(!is.na(value)) %>% 
+  select(year_split, value, ArticleID, EmpiricalStudyData) %>% 
+  rename(data = value) %>% 
+  filter(data != "")
+
+# the dumb hack
+dataDF$data <- gsub("[^[:alnum:]]", "9", dataDF$data)
+dataDF$data <- gsub("^9+(.+)", "\\1", dataDF$data)
+dataDF$data <- gsub("(.+)9+$", "\\1", dataDF$data)
+dataDF$data <- gsub("9", " ", dataDF$data)
+
+# create a summary of the data 
+rawdata_types <- dataDF %>% 
+  group_by(data, year_split, EmpiricalStudyData) %>% 
+  summarize(n = n(), .groups = "keep") %>% 
+  group_by(year_split, EmpiricalStudyData) %>% 
+  mutate(prop = round(n / sum(n)*100, 1))
+
+# code availability of raw data
+DF_filtered_ps$RawDataAvl[DF_filtered_ps$RawDataAvl == ""] <- NA
+DF_filtered_ps$RawDataAvl <- sub(".*corp.*|^Corpus.*", "Avaliable", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("No statement but links to data sources|Raw data \\(examples\\) are provided within the publication", "Avaliable", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub(".*third.*", "Avaliable", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("State that the data is no longer available", "Not Avaliable", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("Some raw data available", "Avaliable", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("No, raw data.*", "Not Avaliable", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("^Yes.*", "Avaliable", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl[!is.na(DF_filtered_ps$EmpiricalStudyData) & is.na(DF_filtered_ps$RawDataAvl)] <- "Not Avaliable"
+
+# create a summary of the data 
+rawdata_graph <- DF_filtered_ps %>% 
+  group_by(RawDataAvl, year_split, EmpiricalStudyData) %>% 
+  summarize(n = n(), .groups = "keep") %>% 
+  group_by(year_split, EmpiricalStudyData) %>% 
+  mutate(prop = round(n / sum(n)*100, 1))
+
+rawdata_access <- rawdata_graph %>% filter(RawDataAvl == "Avaliable")
+
+# raw data access
+DF_filtered_ps$RawDataWhere[DF_filtered_ps$RawDataWhere == ""] <- NA
+DF_filtered_ps$RawDataWhere <- gsub(".*as part of the.*|^Supplementary.*|.*in the article.*", "Supplemental" , DF_filtered_ps$RawDataWhere)
+DF_filtered_ps$RawDataWhere <- gsub(".*Blog.*|^Personal.*", "Personal" , DF_filtered_ps$RawDataWhere)
+DF_filtered_ps$RawDataWhere <- gsub(".*Corpus.*|.*corpus.*|.*third-party.*|.*third party.*", "Third-Party" , DF_filtered_ps$RawDataWhere)
+DF_filtered_ps$RawDataWhere <- gsub(".*request.*|.*not work.*|.*no longer.*|.*Unclear.*", "Dead" , DF_filtered_ps$RawDataWhere)
+```
+
+
+Raw data was defined as recorded information in its rawest, digital form, at the level of sampling units (e.g., participants, words, utterances, trials, etc.). Data for raw data for articles containing primary and secondary data are visualized in Figure 2. Each article could include multiple data types, and therefore, `r nrow(DF_filtered_ps)` articles produced `r nrow(dataDF)` unique data types included in the article, and most frequently, these data were coded as text files. 
+
+
+Of those articles published in 2008/2009 and involving primary data, `r rawdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Primary") %>% pull(n)` (`r rawdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Primary") %>% pull(prop)`%) contained a statement or link regarding the availability of raw data such as audio recordings, transcriptions or data provided by experimental software. Of those articles involving secondary data, `r rawdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Secondary") %>% pull(n)` (`r rawdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Secondary") %>% pull(prop)`%) articles contained such a statement or link. Of those articles published in 2018/2019 and involving primary data, `r rawdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Primary") %>% pull(n)` (`r rawdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Primary") %>% pull(prop)`%) contained such a statement or link. Of those articles involving secondary data, `r rawdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Secondary") %>% pull(n)` (`r rawdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Secondary") %>% pull(prop)`%) articles contained such a statement or link.
+
+For the `r nrow(DF_filtered_ps %>% filter(!is.na(RawDataWhere)))` articles for which raw data were reportedly available, the data were not actually available for `r nrow(DF_filtered_ps %>% filter(RawDataWhere == "Dead"))` articles because of broken links or availability "upon request". For the articles that we could access, the raw data were made available in a journal-hosted supplement (n = `r nrow(DF_filtered_ps %>% filter(RawDataWhere == "Supplemental"))`), on a personal or institutionally hosted (nonrepository) webpage (n = `r nrow(DF_filtered_ps %>% filter(RawDataWhere == "Personal"))`), or in an online third-party repository (n = `r nrow(DF_filtered_ps %>% filter(RawDataWhere == "Third-Party"))`). Of those articles, `r nrow(DF_filtered_ps %>% filter(RawDataDocument == "Yes"))` data sources were documented.
+
+### Derived data
+
+```{r code-processed}
+# clean up processed data
+DF_filtered_ps$ProcessData[DF_filtered_ps$ProcessData == ""] <- NA
+DF_filtered_ps$ProcessData <- sub("^No.*|^Points.*", "Not Avaliable", DF_filtered_ps$ProcessData)
+DF_filtered_ps$ProcessData <- sub("^Yes.*|.*raw data.*", "Avaliable", DF_filtered_ps$ProcessData)
+DF_filtered_ps$ProcessData[is.na(DF_filtered_ps$ProcessData) & !is.na(DF_filtered_ps$EmpiricalStudyData)] <- "Not Avaliable"
+
+# create a summary of the data 
+processdata_graph <- DF_filtered_ps %>% 
+  group_by(ProcessData, year_split, EmpiricalStudyData) %>% 
+  summarize(n = n(), .groups = "keep") %>% 
+  group_by(year_split, EmpiricalStudyData) %>% 
+  mutate(prop = round(n / sum(n)*100, 1))
+
+processdata_access <- processdata_graph %>% filter(ProcessData == "Avaliable")
+
+DF_filtered_ps$ProcessDataWhere[DF_filtered_ps$ProcessDataWhere == ""] <- NA
+DF_filtered_ps$ProcessDataWhere <- gsub("^Personal.*", "Personal" , DF_filtered_ps$ProcessDataWhere)
+DF_filtered_ps$ProcessDataWhere <- gsub(".*third-party.*|.*third party.*", "Third-Party" , DF_filtered_ps$ProcessDataWhere)
+DF_filtered_ps$ProcessDataWhere <- gsub(".*request.*|.*doesn't work.*|.*no longer.*|.*Unclear.*", "Dead" , DF_filtered_ps$ProcessDataWhere)
+DF_filtered_ps$ProcessDataWhere <- gsub("^Supplementary.*", "Supplemental" , DF_filtered_ps$ProcessDataWhere)
+```
+
+Derived data was defined as a derived form of the data that has undergone changes from its raw state (e.g., extraction of acoustic parameters via Praat, aggregates of responses, etc.). Data for derived data for articles containing primary and secondary data are visualized in Figure 2. Of those articles published in 2008/2009 and involving primary data, `r processdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Primary") %>% pull(n)` (`r processdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Primary") %>% pull(prop)`%) contained a statement or link regarding the availability of derived data such as audio recordings, transcriptions or data provided by experimental software. Of those articles involving secondary data, `r processdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Secondary") %>% pull(n)` (`r processdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Secondary") %>% pull(prop)`%) articles contained such a statement or link. Of those articles published in 2018/2019 and involving primary data, `r processdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Primary") %>% pull(n)` (`r processdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Primary") %>% pull(prop)`%) contained such a statement or link. Of those articles involving secondary data, `r processdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Secondary") %>% pull(n)` (`r processdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Secondary") %>% pull(prop)`%) articles contained such a statement or link.
+
+For the `r sum(processdata_access$n)`  articles for which derived data were reportedly available, the data were not actually available for `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Dead"))` articles because of broken links or availability "upon request". For the articles that we could access, the derived data were made available in a journal-hosted supplement (n = `r nrow(DF_filtered_ps %>% filter(ProcessData == "Avaliable" & ProcessDataWhere == "Supplemental"))`), on a personal or institutionally hosted (nonrepository) webpage (n = `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Personal"))`), or in an online third-party repository (n = `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Third-Party"))`). Of those articles, `r nrow(DF_filtered_ps %>% filter(ProcessDataDocument == "Yes"))` data sources were documented.
+
+## 3.5 Analysis-script availability
+
+```{r code-analysis}
+DF_filtered_ps$AnalysisScript[DF_filtered_ps$AnalysisScript == ""] <- NA
+DF_filtered_ps$AnalysisScript <- sub("^No.*|^Analysis.*|^Link.*", "Not Avaliable", DF_filtered_ps$AnalysisScript)
+DF_filtered_ps$AnalysisScript <- sub("^Yes.*", "Avaliable", DF_filtered_ps$AnalysisScript)
+DF_filtered_ps$AnalysisScript[!is.na(DF_filtered_ps$EmpiricalStudyData) & is.na(DF_filtered_ps$AnalysisScript)] <- "Not Avaliable"
+
+# create a summary of the data 
+analysis_graph <- DF_filtered_ps %>% 
+  group_by(AnalysisScript, year_split, EmpiricalStudyData) %>% 
+  summarize(n = n(), .groups = "keep") %>% 
+  group_by(year_split, EmpiricalStudyData) %>% 
+  mutate(prop = round(n / sum(n)*100, 1))
+```
+
+Of the `r nrow(DF_filtered_ps)` articles that involved primary or secondary data, an analysis script was shared for `r nrow(DF_filtered_ps %>% filter(AnalysisScript == "Avaliable"))` articles (`r round(nrow(DF_filtered_ps %>% filter(AnalysisScript == "Avaliable"))/nrow(DF_filtered_ps)*100,1)`%). The scripts were made available in a journal-hosted supplement (n = `r nrow(DF_filtered_ps %>% filter(grepl("^Code|^Suppl", AnalysisScriptWhere)))`), or in an online third-party repository (n = `r nrow(DF_filtered_ps %>% filter(grepl("^An online", AnalysisScriptWhere)))`).
+
+## 3.6 Preregistration
+
+No articles across all coded articles (n = `r nrow(DF_filtered)`) was preregistered.
+
+## 3.7 Replication
+
+Of the `r nrow(DF_filtered_ps)` articles that were experimental, `r nrow(DF_filtered_ps %>% filter(grepl("claims to report", Replication)))` articles (`r round(nrow(DF_filtered_ps %>% filter(grepl("claims to report", Replication)))/nrow(DF_filtered_ps)*100,1)`%) were replications according to the definition used in Kobrock & Roettger (2022): "We first searched for the search string "replic*" and if we got a hit, we examined title and abstract of the paper, text before and after occurrences of the search term replicat*, the paragraph before the Methods section as well as the first paragraph of the Discussion section. If the authors explicitly claimed that (one of) their research aim(s) was to replicate the result or methods of an initial study, this article was treated as a replication." Following Marsden et al. (2018), replication studies were classified according to the number of changes made into three categories: direct replication (0 changes), partial replication (1 change) and conceptual replication (2 or more changes). Of those that were classified as replications, \# were direct replications, \# were partial replications, and \# were conceptual replications. NOTE THAT WE DIDN'T CODE THIS. 
+
+## 3.8 Conflict-of-interest statements
+
+Of the `r nrow(DF_filtered)` coded articles, `r nrow(DF_filtered %>% filter(grepl("Yes", COI)))` included a statement about conflicts-of-interest (`r round(nrow(DF_filtered %>% filter(grepl("Yes", COI)))/nrow(DF_filtered)*100, 1)`%). All of these articles stated that there was no conflict of interest. 
+
+```{r figure2, echo = FALSE, include = TRUE, fig.cap = "Figure 2. Pre-OS (left) and After-OS (right) percentages of the availability of materials, raw data, processed data, and analysis scripts."}
+# combine everything
+fig2_data <- bind_rows(
+  materials_graph %>% 
     mutate(Measure = paste("Materials - ", Materials, sep = "")) %>% 
     na.omit(), 
-  materials2_nums %>% 
-    mutate(Measure = paste("Where - ", MaterialsWhere, sep = "")) %>% 
+  rawdata_graph %>% 
+    mutate(Measure = paste("Raw Data - ", RawDataAvl, sep = "")) %>% 
+    na.omit(), 
+  processdata_graph %>% 
+    mutate(Measure = paste("Processed Data - ", ProcessData, sep = "")) %>% 
+    na.omit(), 
+  analysis_graph %>% 
+    mutate(Measure = paste("Analysis - ", AnalysisScript, sep = "")) %>% 
     na.omit()
-)
+  ) %>% 
+  separate(Measure, sep = "-", 
+           into = c("Type", "Avaliable"), 
+           remove = FALSE,
+           extra = "warn")
 
-ggballoonplot(materialsDF, x = "EmpiricalStudyData_collapse", 
-              y = "Measure", size = "n", fill = "n", facet.by = "year_split", 
-              ggtheme = theme_bw())
+# reorder pre and post
+fig2_data$year_split <- factor(fig2_data$year_split, 
+                               levels = c("Pre-OS", "After-OS"))
+
+ggplot(fig2_data, aes(EmpiricalStudyData, prop, fill = Avaliable)) + 
+  geom_bar(stat = "identity", position = "stack", color = "black") + 
+  theme_classic() +
+  facet_wrap(~Type*year_split, ncol = 2, labeller=function(x) {x[1]}) +
+  xlab("Empirical Study Data Type") + 
+  ylab("Proportion") + 
+  coord_flip()
 ```
-
-3.4 Data availability
-
-Raw data
-
-Raw data was defined as recorded information in its rawest, digital form, at the level of sampling units (e.g., participants, words, utterances, trials, etc). Data for raw data for articles containing primary and secondary data are visualized in Figure X-C. Of those articles published in 2008/2009 and involving primary data, ## (##%) contained a statement or link regarding the availability of raw data such as audio recordings, transcriptions or data provided by experimental software. Of those articles involving secondary data, ## articles contained such a statement or link (##%).
-Of those articles published in 2018/2019 and involving primary data, ## (##%) contained such a statement or link. Of those articles involving secondary data, ## articles contained such a statement or link (##%).
- 
-For the ## articles for which raw data were reportedly available, the data were not actually available for ## articles because of broken links or availability “upon request”. For the ## articles that we could access, the raw data were made available in a journal-hosted supplement (n = #), on a personal or institutionally hosted (nonrepository) webpage (n = #), or in an online third-party repository (n = #). Of those articles, ## data sources were documented. 
-
-Derived data
-
-Derived data was defined as a derived form of the data that has undergone changes from its raw state (e.g., extraction of acoustic parameters via Praat, aggregates of responses, etc.). Data for derived data for articles containing primary and secondary data are visualized in Figure X-D. Of those articles published in 2008/2009 and involving primary data, ## (##%) contained a statement or link regarding the availability of derived data such as audio recordings, transcriptions or data provided by experimental software. Of those articles involving secondary data, ## articles contained such a statement or link (##%).
-
-Of those articles published in 2018/2019 and involving primary data, ## (##%) contained such a statement or link. Of those articles involving secondary data, ## articles contained such a statement or link (##%).
- 
-For the ## articles for which derived data were reportedly available, the data were not actually available for ## articles because of broken links or availability “upon request”. For the ## articles that we could access, the derived data were made available in a journal-hosted supplement (n = #), on a personal or institutionally hosted (nonrepository) webpage (n = #), or in an online third-party repository (n = #). Of those articles, ## data sources were documented. 
-
-3.5 Analysis-script availability 
-
-Of the ### articles that involved primary or secondary data, an analysis script was shared for ## articles (#%). For the ## articles that we could access, the scripts were made available in a journal-hosted supplement (n = #), on a personal or institutionally hosted (nonrepository) webpage (n = #), or in an online third-party repository (n = #, see Figure X-E).
-
-3.6 Preregistration
-
-Of the ### articles that involved primary or secondary data, none was preregistered.
-
-3.7 Replication
-
-Of the ### articles that were experimental, ## articles (#%) were replications according to the definition used in Kobrock & Roettger (2022): “We first searched for the search string “replic*” and if we got a hit, we examined title and abstract of the paper, text before and after occurrences of the search term replicat*, the paragraph before the Methods section as well as the first paragraph of the Discussion section. If the authors explicitly claimed that (one of) their research aim(s) was to replicate the result or methods of an initial study, this article was treated as a replication.” Following Marsden et al. (2018), replication studies were classified according to the number of changes made into three categories: direct replication (0 changes), partial replication (1 change) and conceptual replication (2 or more changes). Of those that were classified as replications, # were direct replications, # were partial replications, and # were conceptual replications (see Figure X-F). 
-
-3.8 Conflict-of-interest statements
-
-Of the ### accessible articles, ### included a statement about conflicts-of-interest (##%,). Of these ## articles, most reported that there were no conflicts of interest (n = ##; ##%), and ## (##%) reported that there was at least one conflict of interest. SUMMARY.
