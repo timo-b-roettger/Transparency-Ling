@@ -677,29 +677,48 @@ fig2_data2 <- fig2_data %>%
             levels = c("Materials ", "Raw Data ", "Processed Data ", "Analysis "))
        )
 
+levels(fig2_data2$year_split) <- c("Pre-OS (2008-09)", "After-OS (2018-2019)")
+
+fig2_data_label <- fig2_data2 %>%
+  mutate(label = paste0(prop, "% ", "(n = ", n, ")"),
+         label = ifelse(Avaliable != " Avaliable", label, ""),
+         label2 = ifelse(prop > 10 & Avaliable == " Avaliable", paste0(prop, "%"), "")
+       )
+
 # plot
-ggplot(fig2_data2, aes(x = EmpiricalStudyData, 
-                      y = prop, 
-                      fill = Avaliable)) + 
+ggplot(fig2_data2, aes(y = EmpiricalStudyData, 
+                       x = prop, 
+                       col = Avaliable,
+                       fill = Avaliable)) + 
   geom_col(position = "stack", 
            color = "black") + 
-  geom_text(data = fig2_data2[fig2_data2$prop > 10,],
-            aes(label = paste0(prop, "%")),
+  geom_text(data = fig2_data_label,
+            aes(label = label),
+            position = position_stack(vjust = 0.5),
+            cex = 4) +
+  geom_text(data = fig2_data_label,
+            aes(label = label2),
             position = position_stack(vjust = 0.5),
             cex = 4) +
   facet_grid(Type ~ year_split) +
-  labs(title = "",
+  labs(title = "Assessment of transparency-related research practices in linguistics",
        subtitle = "",
        x = "\n proportion in %",
        y = "") +
+  guides(color = "none") +
+  scale_color_manual(values = c("white", "black")) +
   scale_fill_manual(values = c("#8970FF", "#FFA70B")) +
-  scale_y_continuous(limits = c(0, 100),
+  scale_x_continuous(limits = c(0, 100),
                      breaks = c(0,20,40,60,80,100),
                      labels = c("0%","20%","40%","60%","80%","100%")) +
-  coord_flip() +
   theme_minimal() +
-  theme( strip.background = element_blank(),
-           axis.title.y = element_blank()
+  theme(strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        title = element_text(size = 16,
+                             face = "bold"),
+        strip.text.x = element_text(size = 14),
+        strip.text.y = element_text(size = 12)
     )
+
 
 ```
