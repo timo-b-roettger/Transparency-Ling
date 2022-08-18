@@ -24,6 +24,8 @@ library(patchwork)
 library(papaja)
 library(RColorBrewer)
 library(ggdist)
+library(forcats)
+
 
 
 # define handy function 
@@ -163,7 +165,8 @@ bar_languages <-
                                        size = 14),
     plot.subtitle = element_text(size = 12),
     plot.title.position = "plot"
-  ) 
+  )
+
 ```
 
 ```{r code-country}
@@ -609,6 +612,12 @@ Of the `r nrow(DF_filtered_ps)` articles that involved primary or secondary data
 
 ## 3.6 Preregistration
 
+```{r code-analysis}
+
+
+
+```
+
 No articles across all coded articles (n = `r nrow(DF_filtered)`) was preregistered.
 
 ## 3.7 Replication
@@ -651,4 +660,46 @@ ggplot(fig2_data, aes(EmpiricalStudyData, prop, fill = Avaliable)) +
   xlab("Empirical Study Data Type") + 
   ylab("Proportion") + 
   coord_flip()
+```
+
+
+```{r eval = FALSE}
+
+# TRs suggestion
+# rearrange levels
+fig2_data2 <- fig2_data %>%
+  mutate(year_split = factor(year_split, 
+            levels = c("Pre-OS", "After-OS")),
+         EmpiricalStudyData = factor(EmpiricalStudyData, 
+            levels = c("Secondary", "Primary")),
+         Type = as.factor(Type),
+         Type = factor(Type, 
+            levels = c("Materials ", "Raw Data ", "Processed Data ", "Analysis "))
+       )
+
+# plot
+ggplot(fig2_data2, aes(x = EmpiricalStudyData, 
+                      y = prop, 
+                      fill = Avaliable)) + 
+  geom_col(position = "stack", 
+           color = "black") + 
+  geom_text(data = fig2_data2[fig2_data2$prop > 10,],
+            aes(label = paste0(prop, "%")),
+            position = position_stack(vjust = 0.5),
+            cex = 4) +
+  facet_grid(Type ~ year_split) +
+  labs(title = "",
+       subtitle = "",
+       x = "\n proportion in %",
+       y = "") +
+  scale_fill_manual(values = c("#8970FF", "#FFA70B")) +
+  scale_y_continuous(limits = c(0, 100),
+                     breaks = c(0,20,40,60,80,100),
+                     labels = c("0%","20%","40%","60%","80%","100%")) +
+  coord_flip() +
+  theme_minimal() +
+  theme( strip.background = element_blank(),
+           axis.title.y = element_blank()
+    )
+
 ```
