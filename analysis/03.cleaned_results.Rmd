@@ -446,7 +446,7 @@ DF_filtered_ps$Materials <- trimws(DF_filtered_ps$Materials)
 
 DF_filtered_ps$Materials <- factor(DF_filtered_ps$Materials,
                                 levels = names(table(DF_filtered_ps$Materials)), 
-                                labels = c("Not Avaliable", "Avaliable"))
+                                labels = c("not available", "available"))
 
 # clean up where 
 DF_filtered_ps$MaterialsWhere[DF_filtered_ps$MaterialsWhere == ""] <- NA
@@ -472,10 +472,10 @@ materials_access <- DF_filtered_ps %>%
   summarize(n = n(), .groups = "keep") %>% 
   group_by(year_split, EmpiricalStudyData) %>% 
   mutate(prop = round(n / sum(n)*100, 1)) %>% 
-  filter(Materials == "Avaliable")
+  filter(Materials == "available")
 
 materials_where <- DF_filtered_ps %>% 
-  filter(Materials == "Avaliable") %>% 
+  filter(Materials == "available") %>% 
   group_by(MaterialsWhere) %>% 
   summarize(n = n()) %>% 
   mutate(prop = round(n / sum(n)*100, 1))
@@ -529,14 +529,14 @@ rawdata_types <- dataDF %>%
 
 # code availability of raw data
 DF_filtered_ps$RawDataAvl[DF_filtered_ps$RawDataAvl == ""] <- NA
-DF_filtered_ps$RawDataAvl <- sub(".*corp.*|^Corpus.*", "Avaliable", DF_filtered_ps$RawDataAvl)
-DF_filtered_ps$RawDataAvl <- sub("No statement but links to data sources|Raw data \\(examples\\) are provided within the publication", "Avaliable", DF_filtered_ps$RawDataAvl)
-DF_filtered_ps$RawDataAvl <- sub(".*third.*", "Avaliable", DF_filtered_ps$RawDataAvl)
-DF_filtered_ps$RawDataAvl <- sub("State that the data is no longer available", "Not Avaliable", DF_filtered_ps$RawDataAvl)
-DF_filtered_ps$RawDataAvl <- sub("Some raw data available", "Avaliable", DF_filtered_ps$RawDataAvl)
-DF_filtered_ps$RawDataAvl <- sub("No, raw data.*", "Not Avaliable", DF_filtered_ps$RawDataAvl)
-DF_filtered_ps$RawDataAvl <- sub("^Yes.*", "Avaliable", DF_filtered_ps$RawDataAvl)
-DF_filtered_ps$RawDataAvl[!is.na(DF_filtered_ps$EmpiricalStudyData) & is.na(DF_filtered_ps$RawDataAvl)] <- "Not Avaliable"
+DF_filtered_ps$RawDataAvl <- sub(".*corp.*|^Corpus.*", "available", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("No statement but links to data sources|Raw data \\(examples\\) are provided within the publication", "available", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub(".*third.*", "available", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("State that the data is no longer available", "not available", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("Some raw data available", "available", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("No, raw data.*", "not available", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl <- sub("^Yes.*", "available", DF_filtered_ps$RawDataAvl)
+DF_filtered_ps$RawDataAvl[!is.na(DF_filtered_ps$EmpiricalStudyData) & is.na(DF_filtered_ps$RawDataAvl)] <- "not available"
 
 # create a summary of the data 
 rawdata_graph <- DF_filtered_ps %>% 
@@ -545,7 +545,7 @@ rawdata_graph <- DF_filtered_ps %>%
   group_by(year_split, EmpiricalStudyData) %>% 
   mutate(prop = round(n / sum(n)*100, 1))
 
-rawdata_access <- rawdata_graph %>% filter(RawDataAvl == "Avaliable")
+rawdata_access <- rawdata_graph %>% filter(RawDataAvl == "available")
 
 # raw data access
 DF_filtered_ps$RawDataWhere[DF_filtered_ps$RawDataWhere == ""] <- NA
@@ -568,9 +568,9 @@ For the `r nrow(DF_filtered_ps %>% filter(!is.na(RawDataWhere)))` articles for w
 ```{r code-processed}
 # clean up processed data
 DF_filtered_ps$ProcessData[DF_filtered_ps$ProcessData == ""] <- NA
-DF_filtered_ps$ProcessData <- sub("^No.*|^Points.*", "Not Avaliable", DF_filtered_ps$ProcessData)
-DF_filtered_ps$ProcessData <- sub("^Yes.*|.*raw data.*", "Avaliable", DF_filtered_ps$ProcessData)
-DF_filtered_ps$ProcessData[is.na(DF_filtered_ps$ProcessData) & !is.na(DF_filtered_ps$EmpiricalStudyData)] <- "Not Avaliable"
+DF_filtered_ps$ProcessData <- sub("^No.*|^Points.*", "not available", DF_filtered_ps$ProcessData)
+DF_filtered_ps$ProcessData <- sub("^Yes.*|.*raw data.*", "available", DF_filtered_ps$ProcessData)
+DF_filtered_ps$ProcessData[is.na(DF_filtered_ps$ProcessData) & !is.na(DF_filtered_ps$EmpiricalStudyData)] <- "not available"
 
 # create a summary of the data 
 processdata_graph <- DF_filtered_ps %>% 
@@ -579,7 +579,7 @@ processdata_graph <- DF_filtered_ps %>%
   group_by(year_split, EmpiricalStudyData) %>% 
   mutate(prop = round(n / sum(n)*100, 1))
 
-processdata_access <- processdata_graph %>% filter(ProcessData == "Avaliable")
+processdata_access <- processdata_graph %>% filter(ProcessData == "available")
 
 DF_filtered_ps$ProcessDataWhere[DF_filtered_ps$ProcessDataWhere == ""] <- NA
 DF_filtered_ps$ProcessDataWhere <- gsub("^Personal.*", "Personal" , DF_filtered_ps$ProcessDataWhere)
@@ -590,15 +590,15 @@ DF_filtered_ps$ProcessDataWhere <- gsub("^Supplementary.*", "Supplemental" , DF_
 
 Derived data was defined as a derived form of the data that has undergone changes from its raw state (e.g., extraction of acoustic parameters via Praat, aggregates of responses, etc.). Data for derived data for articles containing primary and secondary data are visualized in Figure 2. Of those articles published in 2008/2009 and involving primary data, `r processdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Primary") %>% pull(n)` (`r processdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Primary") %>% pull(prop)`%) contained a statement or link regarding the availability of derived data such as audio recordings, transcriptions or data provided by experimental software. Of those articles involving secondary data, `r processdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Secondary") %>% pull(n)` (`r processdata_access %>% filter(year_split == "Pre-OS" & EmpiricalStudyData == "Secondary") %>% pull(prop)`%) articles contained such a statement or link. Of those articles published in 2018/2019 and involving primary data, `r processdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Primary") %>% pull(n)` (`r processdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Primary") %>% pull(prop)`%) contained such a statement or link. Of those articles involving secondary data, `r processdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Secondary") %>% pull(n)` (`r processdata_access %>% filter(year_split == "After-OS" & EmpiricalStudyData == "Secondary") %>% pull(prop)`%) articles contained such a statement or link.
 
-For the `r sum(processdata_access$n)`  articles for which derived data were reportedly available, the data were not actually available for `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Dead"))` articles because of broken links or availability "upon request". For the articles that we could access, the derived data were made available in a journal-hosted supplement (n = `r nrow(DF_filtered_ps %>% filter(ProcessData == "Avaliable" & ProcessDataWhere == "Supplemental"))`), on a personal or institutionally hosted (nonrepository) webpage (n = `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Personal"))`), or in an online third-party repository (n = `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Third-Party"))`). Of those articles, `r nrow(DF_filtered_ps %>% filter(ProcessDataDocument == "Yes"))` data sources were documented.
+For the `r sum(processdata_access$n)`  articles for which derived data were reportedly available, the data were not actually available for `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Dead"))` articles because of broken links or availability "upon request". For the articles that we could access, the derived data were made available in a journal-hosted supplement (n = `r nrow(DF_filtered_ps %>% filter(ProcessData == "available" & ProcessDataWhere == "Supplemental"))`), on a personal or institutionally hosted (nonrepository) webpage (n = `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Personal"))`), or in an online third-party repository (n = `r nrow(DF_filtered_ps %>% filter(ProcessDataWhere == "Third-Party"))`). Of those articles, `r nrow(DF_filtered_ps %>% filter(ProcessDataDocument == "Yes"))` data sources were documented.
 
 ## 3.5 Analysis-script availability
 
 ```{r code-analysis}
 DF_filtered_ps$AnalysisScript[DF_filtered_ps$AnalysisScript == ""] <- NA
-DF_filtered_ps$AnalysisScript <- sub("^No.*|^Analysis.*|^Link.*", "Not Avaliable", DF_filtered_ps$AnalysisScript)
-DF_filtered_ps$AnalysisScript <- sub("^Yes.*", "Avaliable", DF_filtered_ps$AnalysisScript)
-DF_filtered_ps$AnalysisScript[!is.na(DF_filtered_ps$EmpiricalStudyData) & is.na(DF_filtered_ps$AnalysisScript)] <- "Not Avaliable"
+DF_filtered_ps$AnalysisScript <- sub("^No.*|^Analysis.*|^Link.*", "not available", DF_filtered_ps$AnalysisScript)
+DF_filtered_ps$AnalysisScript <- sub("^Yes.*", "available", DF_filtered_ps$AnalysisScript)
+DF_filtered_ps$AnalysisScript[!is.na(DF_filtered_ps$EmpiricalStudyData) & is.na(DF_filtered_ps$AnalysisScript)] <- "not available"
 
 # create a summary of the data 
 analysis_graph <- DF_filtered_ps %>% 
@@ -608,7 +608,7 @@ analysis_graph <- DF_filtered_ps %>%
   mutate(prop = round(n / sum(n)*100, 1))
 ```
 
-Of the `r nrow(DF_filtered_ps)` articles that involved primary or secondary data, an analysis script was shared for `r nrow(DF_filtered_ps %>% filter(AnalysisScript == "Avaliable"))` articles (`r round(nrow(DF_filtered_ps %>% filter(AnalysisScript == "Avaliable"))/nrow(DF_filtered_ps)*100,1)`%). The scripts were made available in a journal-hosted supplement (n = `r nrow(DF_filtered_ps %>% filter(grepl("^Code|^Suppl", AnalysisScriptWhere)))`), or in an online third-party repository (n = `r nrow(DF_filtered_ps %>% filter(grepl("^An online", AnalysisScriptWhere)))`).
+Of the `r nrow(DF_filtered_ps)` articles that involved primary or secondary data, an analysis script was shared for `r nrow(DF_filtered_ps %>% filter(AnalysisScript == "available"))` articles (`r round(nrow(DF_filtered_ps %>% filter(AnalysisScript == "available"))/nrow(DF_filtered_ps)*100,1)`%). The scripts were made available in a journal-hosted supplement (n = `r nrow(DF_filtered_ps %>% filter(grepl("^Code|^Suppl", AnalysisScriptWhere)))`), or in an online third-party repository (n = `r nrow(DF_filtered_ps %>% filter(grepl("^An online", AnalysisScriptWhere)))`).
 
 ## 3.6 Preregistration
 
@@ -645,7 +645,7 @@ fig2_data <- bind_rows(
     na.omit()
   ) %>% 
   separate(Measure, sep = "-", 
-           into = c("Type", "Avaliable"), 
+           into = c("Type", "available"), 
            remove = FALSE,
            extra = "warn")
 
@@ -653,7 +653,7 @@ fig2_data <- bind_rows(
 fig2_data$year_split <- factor(fig2_data$year_split, 
                                levels = c("Pre-OS", "After-OS"))
 
-ggplot(fig2_data, aes(EmpiricalStudyData, prop, fill = Avaliable)) + 
+ggplot(fig2_data, aes(EmpiricalStudyData, prop, fill = available)) + 
   geom_bar(stat = "identity", position = "stack", color = "black") + 
   theme_classic() +
   facet_wrap(~Type*year_split, ncol = 2, labeller=function(x) {x[1]}) +
@@ -681,15 +681,15 @@ levels(fig2_data2$year_split) <- c("Pre-OS (2008-09)", "After-OS (2018-2019)")
 
 fig2_data_label <- fig2_data2 %>%
   mutate(label = paste0(prop, "% ", "(n = ", n, ")"),
-         label = ifelse(Avaliable != " Avaliable", label, ""),
-         label2 = ifelse(prop > 10 & Avaliable == " Avaliable", paste0(prop, "%"), "")
+         label = ifelse(available != " available", label, ""),
+         label2 = ifelse(prop > 10 & available == " available", paste0(prop, "%"), "")
        )
 
 # plot
 ggplot(fig2_data2, aes(y = EmpiricalStudyData, 
                        x = prop, 
-                       col = Avaliable,
-                       fill = Avaliable)) + 
+                       col = available,
+                       fill = available)) + 
   geom_col(position = "stack", 
            color = "black") + 
   geom_text(data = fig2_data_label,
