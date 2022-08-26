@@ -149,15 +149,17 @@ bar_languages <-
   geom_text(data = freq_split[freq_split$language_new %in% c("English", "Other", "Universal"),],
             aes(x = year_split,
                 y = pos,
-                label = paste0(prop, "%"))) + 
+                label = paste0(prop, "%")),
+            color = c("white", "white", "black", "black", "white", "white")) + 
   labs(title = "B: Languages Sampled",
        x = "",
        y = "") + 
-  scale_x_discrete(limits = c("Pre-OS","After-OS")) +
+  scale_x_discrete(limits = c("Pre-OS","After-OS"),
+                   label = c("Pre-RC", "Post-RC")) +
   scale_y_continuous(breaks = c(0, 25, 50, 75, 100), 
                      labels = c("0%", "25%", "50%", "75%", "100%")) + 
   guides(fill = guide_legend(title="Target Language(s)")) +
-  scale_fill_brewer(palette="BrBG") + 
+  scale_fill_brewer(palette="PRGn") + 
   theme_minimal() +
   theme(
     legend.position = "right",
@@ -211,20 +213,29 @@ bar_countries <-
   geom_text(data = country_summary[country_summary$CountryCode2 %in% c("Northern America", "Northern Europe", "Asia", "Western Europe"),],
             aes(x = year_split,
                 y = pos,
-                label = paste0(prop, "%"))) + 
+                label = paste0(prop, "%")),
+            color = c("white", "white", "white", "white",
+                      "black", "black", "black", "black")) + 
   labs(title = "A: Author Affiliation",
        x = "",
        y = "") + 
-  scale_x_discrete(limits = c("Pre-OS","After-OS")) +
+  scale_x_discrete(limits = c("Pre-OS","After-OS"),
+                   label = c("Pre-RC", "Post-RC")) +
   scale_y_continuous(breaks = c(0, 25, 50, 75, 100), 
-                     labels = c("0%", "25%", "50%", "75%", "100%")) + 
-  guides(fill = guide_legend(title="Country")) +
+                     labels = c("0%", "25%", "50%", "75%", "100%"),
+                     position = "right") + 
+  guides(fill = guide_legend(title = "Country", 
+                             title.hjust = 1, 
+                             label.position = "left", 
+                             label.hjust = 1, 
+                             label.vjust = 0.5)) + 
   scale_fill_brewer(palette="BrBG") + 
   theme_minimal() +
   theme(
-    legend.position = "right",
+    legend.position = "left",
     plot.title = element_text(face = "bold",
-                                       size = 14),
+                              size = 14,
+                              hjust = 1),
     plot.subtitle = element_text(size = 12),
     plot.title.position = "plot"
   ) 
@@ -659,60 +670,183 @@ fig2_data$year_split <- factor(fig2_data$year_split,
 #   coord_flip()
 
 # TRs suggestion
-# rearrange levels
 fig2_data2 <- fig2_data %>%
   mutate(year_split = factor(year_split, 
             levels = c("Pre-OS", "After-OS")),
          EmpiricalStudyData = factor(EmpiricalStudyData, 
             levels = c("Secondary", "Primary")),
+         available = factor(available, 
+            levels = c(" available", " not available")),
          Type = as.factor(Type),
          Type = factor(Type, 
             levels = c("Materials ", "Raw Data ", "Processed Data ", "Analysis "))
        )
 
-levels(fig2_data2$year_split) <- c("Pre-OS (2008-09)", "After-OS (2018-2019)")
+levels(fig2_data2$year_split) <- c("Pre-RC (2008-09)", "Post-RC (2018-2019)")
 
 fig2_data_label <- fig2_data2 %>%
-  mutate(label = paste0(prop, "% ", "(n = ", n, ")"),
+  mutate(label = paste0(round(prop,0), "% ", "(n = ", n, ")"),
          label = ifelse(available != " available", label, ""),
-         label2 = ifelse(prop > 10 & available == " available", paste0(prop, "%"), "")
+         label2 = ifelse(prop > 10 & available == " available", paste0(round(prop,0), "%"), "")
        )
 
 # plot
+fig2 <- 
 ggplot(fig2_data2, aes(y = EmpiricalStudyData, 
                        x = prop, 
                        col = available,
                        fill = available)) + 
   geom_col(position = "stack", 
-           color = "black") + 
+           color = "black", 
+           size = 0.05) + 
   geom_text(data = fig2_data_label,
             aes(label = label),
-            position = position_stack(vjust = 0.5),
-            cex = 4) +
+            x = 10,
+            hjust = 0,
+            cex = 5) +
   geom_text(data = fig2_data_label,
             aes(label = label2),
-            position = position_stack(vjust = 0.5),
-            cex = 4) +
+            x = 98,
+            hjust = 1,
+            cex = 5) +
   facet_grid(Type ~ year_split) +
   labs(title = "Assessment of transparency-related research practices in linguistics",
        subtitle = "",
        x = "\n Proportion in %",
        y = "",
        fill = "") +
-  guides(color = "none") +
-  scale_color_manual(values = c("white", "black")) +
-  scale_fill_manual(values = c("#8970FF", "#FFA70B")) +
+  guides(color = "none",
+         fill = guide_legend(reverse = TRUE)) +
+  scale_color_manual(values = c("black", "black")) +
+  scale_fill_manual(values = c("#66c2a5", "lightgrey")) +
   scale_x_continuous(limits = c(0, 100),
+                     expand = c(0,0),
                      breaks = c(0,20,40,60,80,100),
                      labels = c("0%","20%","40%","60%","80%","100%")) +
-  theme_minimal() +
-  theme(strip.background = element_blank(),
+  theme_classic() +
+  theme(legend.position = "bottom",
+        strip.background = element_blank(),
         axis.title.y = element_blank(),
         title = element_text(size = 16,
                              face = "bold"),
-        strip.text.x = element_text(size = 14),
-        strip.text.y = element_text(size = 12)
+        axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(size = 12),
+        strip.text.x = element_text(size = 14, 
+                                    hjust = 0.5,
+                                    face = "bold"),
+        strip.text.y = element_text(size = 12,
+                                    angle = 0,
+                                    hjust = 0,
+                                    face = "bold"),
+        legend.title = element_text(size = 12,
+                                    face = "bold"),
+        legend.text=element_text(size = 12),
+
+        panel.background = element_rect(fill = 'white'),
+        panel.spacing.x = unit(2, "lines"),
+        panel.spacing.y = unit(1.5, "lines")
     )
+
+ggsave(filename = "figure2.png",
+       plot = fig2,
+       device = "png",
+       width = 300, 
+       height = 150,
+       units = "mm", 
+       bg='#ffffff',
+       dpi = 500)
+
+# alternative color scheme
+
+fig2_data2 <- fig2_data %>%
+  mutate(year_split = factor(year_split, 
+            levels = c("Pre-OS", "After-OS")),
+         EmpiricalStudyData = factor(EmpiricalStudyData, 
+            levels = c("Secondary", "Primary")),
+         available = factor(available, 
+            levels = c(" available", " not available")),
+         Type = as.factor(Type),
+         Type = factor(Type, 
+            levels = c("Materials ", "Raw Data ", "Processed Data ", "Analysis "))
+       )
+
+levels(fig2_data2$year_split) <- c("Pre-RC (2008-09)", "Post-RC (2018-2019)")
+
+fig2_data_label <- fig2_data2 %>%
+  mutate(label = paste0(round(prop,0), "% ", "(n = ", n, ")"),
+         label = ifelse(available != " available", label, ""),
+         label2 = ifelse(prop > 10 & available == " available", paste0(round(prop,0), "%"), "")
+       )
+
+# plot
+fig2b <- 
+ggplot(fig2_data2, aes(y = EmpiricalStudyData, 
+                       x = prop, 
+                       col = available,
+                       fill = available)) + 
+  geom_col(position = "stack", 
+           color = "black", 
+           size = 0.05) + 
+  geom_text(data = fig2_data_label,
+            aes(label = label),
+            x = 10,
+            hjust = 0,
+            cex = 5) +
+  geom_text(data = fig2_data_label,
+            aes(label = label2),
+            x = 98,
+            hjust = 1,
+            cex = 5) +
+  facet_grid(Type ~ year_split) +
+  labs(title = "Assessment of transparency-related research practices in linguistics",
+       subtitle = "",
+       x = "\n Proportion in %",
+       y = "",
+       fill = "") +
+  guides(color = "none",
+         fill = guide_legend(reverse = TRUE)) +
+  scale_color_manual(values = c("black", "black")) +
+  scale_fill_manual(values = c("#4dac26", "#f1b6da")) +
+  scale_x_continuous(limits = c(0, 100),
+                     expand = c(0,0),
+                     breaks = c(0,20,40,60,80,100),
+                     labels = c("0%","20%","40%","60%","80%","100%")) +
+  theme_classic() +
+  theme(legend.position = "bottom",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        title = element_text(size = 16,
+                             face = "bold"),
+        axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(size = 12),
+        strip.text.x = element_text(size = 14, 
+                                    hjust = 0.5,
+                                    face = "bold"),
+        strip.text.y = element_text(size = 12,
+                                    angle = 0,
+                                    hjust = 0,
+                                    face = "bold"),
+        legend.title = element_text(size = 12,
+                                    face = "bold"),
+        legend.text=element_text(size = 12),
+
+        panel.background = element_rect(fill = 'white'),
+        panel.spacing.x = unit(2, "lines"),
+        panel.spacing.y = unit(1.5, "lines")
+    )
+
+ggsave(filename = "figure2b.png",
+       plot = fig2b,
+       device = "png",
+       width = 300, 
+       height = 150,
+       units = "mm", 
+       bg='#ffffff',
+       dpi = 500)
+
+
 ```
 
 ## Discussion
