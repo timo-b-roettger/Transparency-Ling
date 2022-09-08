@@ -888,5 +888,14 @@ round(table(DF_filtered$CountryAuthor, useNA = "ifany") / nrow(DF_filtered) * 10
 
 # overall
 fig2_data2 %>% select(year_split, EmpiricalStudyData, n, prop, available) %>% write.csv(., file = "final_percents.csv", row.names = F)
+
+# that english thing
+langDF$compare <- "other"
+langDF$compare[langDF$language == "english"] <- "english"
+langDF$compare[langDF$language %in% c("german", "dutch", "danish", 
+                                      "norwegian", "swedish", "french", 
+                                      "spanish", "italian", "catalan", 
+                                      "polish", "czech", "russian")] <- "indo"
+table(langDF$compare) / nrow(langDF) * 100
 ```
 
