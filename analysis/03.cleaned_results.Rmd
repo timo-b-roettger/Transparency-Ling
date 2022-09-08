@@ -651,7 +651,7 @@ Of the `r nrow(DF_filtered_ps)` articles that were experimental, `r nrow(DF_filt
 
 Of the `r nrow(DF_filtered)` coded articles, `r nrow(DF_filtered %>% filter(grepl("Yes", COI)))` included a statement about conflicts-of-interest (`r round(nrow(DF_filtered %>% filter(grepl("Yes", COI)))/nrow(DF_filtered)*100, 1)`%). All of these articles stated that there was no conflict of interest. 
 
-```{r figure2, echo = FALSE, include = TRUE, fig.cap = "Figure 2. Pre-OS (left) and After-OS (right) percentages of the availability of materials, raw data, processed data, and analysis scripts."}
+```{r figure2, echo = FALSE, include = TRUE, fig.cap = "Figure 2. Percentages of the availability of materials, raw data, processed data, and analysis scripts for Pre-RC (before acknowledgement of replication crisis, left) and Post-RC (after acknowledgement, right)."}
 # combine everything
 fig2_data <- bind_rows(
   materials_graph %>% 
@@ -691,7 +691,8 @@ fig2_data2 <- fig2_data %>%
          EmpiricalStudyData = factor(EmpiricalStudyData, 
             levels = c("Secondary", "Primary")),
          available = factor(available, 
-            levels = c(" available", " not available")),
+            levels = c(" available", " not available"),
+            labels = c(" Available", " Not available")),
          Type = as.factor(Type),
          Type = factor(Type, 
             levels = c("Materials ", "Raw Data ", "Processed Data ", "Analysis "))
@@ -701,8 +702,8 @@ levels(fig2_data2$year_split) <- c("Pre-RC (2008-09)", "Post-RC (2018-2019)")
 
 fig2_data_label <- fig2_data2 %>%
   mutate(label = paste0(round(prop,0), "% ", "(n = ", n, ")"),
-         label = ifelse(available != " available", label, ""),
-         label2 = ifelse(prop > 10 & available == " available", paste0(round(prop,0), "%"), "")
+         label = ifelse(available != " Available", label, ""),
+         label2 = ifelse(prop > 10 & available == " Available", paste0(round(prop,0), "%"), "")
        )
 
 # plot
@@ -742,7 +743,7 @@ ggplot(fig2_data2, aes(y = EmpiricalStudyData,
   theme(legend.position = "bottom",
         strip.background = element_blank(),
         axis.title.y = element_blank(),
-        title = element_text(size = 16,
+        title = element_text(size = 14,
                              face = "bold"),
         axis.line = element_blank(),
         axis.ticks = element_blank(),
@@ -780,7 +781,8 @@ fig2_data2 <- fig2_data %>%
          EmpiricalStudyData = factor(EmpiricalStudyData, 
             levels = c("Secondary", "Primary")),
          available = factor(available, 
-            levels = c(" available", " not available")),
+            levels = c(" available", " not available"),
+            labels = c(" Available", " Not available")),
          Type = as.factor(Type),
          Type = factor(Type, 
             levels = c("Materials ", "Raw Data ", "Processed Data ", "Analysis "))
@@ -790,8 +792,8 @@ levels(fig2_data2$year_split) <- c("Pre-RC (2008-09)", "Post-RC (2018-2019)")
 
 fig2_data_label <- fig2_data2 %>%
   mutate(label = paste0(round(prop,0), "% ", "(n = ", n, ")"),
-         label = ifelse(available != " available", label, ""),
-         label2 = ifelse(prop > 10 & available == " available", paste0(round(prop,0), "%"), "")
+         label = ifelse(available != " Available", label, ""),
+         label2 = ifelse(prop > 10 & available == " Available", paste0(round(prop,0), "%"), "")
        )
 
 # plot
@@ -831,7 +833,7 @@ ggplot(fig2_data2, aes(y = EmpiricalStudyData,
   theme(legend.position = "bottom",
         strip.background = element_blank(),
         axis.title.y = element_blank(),
-        title = element_text(size = 16,
+        title = element_text(size = 14,
                              face = "bold"),
         axis.line = element_blank(),
         axis.ticks = element_blank(),
@@ -860,8 +862,6 @@ ggsave(filename = "figure/figure2b.png",
        units = "mm", 
        bg='#ffffff',
        dpi = 500)
-
-
 ```
 
 ## Discussion
@@ -885,5 +885,8 @@ round(table(langDF$language, useNA = "ifany") / nrow(langDF) * 100, 1)
 # country
 table(DF_filtered$CountryAuthor, useNA = "ifany")
 round(table(DF_filtered$CountryAuthor, useNA = "ifany") / nrow(DF_filtered) * 100, 1)
+
+# overall
+fig2_data2 %>% select(year_split, EmpiricalStudyData, n, prop, available) %>% write.csv(., file = "final_percents.csv", row.names = F)
 ```
 
