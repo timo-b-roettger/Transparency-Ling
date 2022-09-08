@@ -138,24 +138,28 @@ freq_split <- freq_split %>%
   group_by(year_split) %>% 
   mutate(pos = cumsum(prop)-.5*(prop))
 
+# change for labels for manuscript
+freq_split$year_split2 <- factor(freq_split$year_split, 
+                                 levels = c("Pre-OS", "After-OS"),
+                                 labels = c("Pre-RC", "Post-RC"))
+
 # make the graph 
 bar_languages <- 
-  ggplot(freq_split, aes(x = year_split, 
+  ggplot(freq_split, aes(x = year_split2, 
                          y =  prop, 
                          fill = language_new)) +
   geom_bar(stat = "identity",
            #col = "black",
            position = position_stack()) +
   geom_text(data = freq_split[freq_split$language_new %in% c("English", "Other", "Universal"),],
-            aes(x = year_split,
+            aes(x = year_split2,
                 y = pos,
                 label = paste0(prop, "%")),
             color = c("white", "white", "black", "black", "white", "white")) + 
   labs(title = "B: Languages Sampled",
        x = "",
        y = "") + 
-  scale_x_discrete(limits = c("Pre-OS","After-OS"),
-                   label = c("Pre-RC", "Post-RC")) +
+  scale_x_discrete(limits = c("Pre-RC", "Post-RC")) +
   scale_y_continuous(breaks = c(0, 25, 50, 75, 100), 
                      labels = c("0%", "25%", "50%", "75%", "100%")) + 
   guides(fill = guide_legend(title="Target Language(s)")) +
@@ -165,8 +169,7 @@ bar_languages <-
     legend.position = "right",
     plot.title = element_text(face = "bold",
                                        size = 14),
-    plot.subtitle = element_text(size = 12),
-    plot.title.position = "plot"
+    plot.subtitle = element_text(size = 12)
   )
 
 ```
@@ -201,17 +204,22 @@ country_summary <- DF %>%
   mutate(prop = round(n / sum(n)*100, 1)) %>% 
   arrange(desc(CountryCode2)) %>% 
   mutate(pos = cumsum(prop)-.5*(prop))
+
+# change labels for publication
+country_summary$year_split2 <- factor(country_summary$year_split,
+                                      levels = c("Pre-OS", "After-OS"),
+                                      labels = c("Pre-RC", "Post-RC"))
   
 # create bar plot of countries 
 bar_countries <- 
-  ggplot(country_summary, aes(x = year_split, 
+  ggplot(country_summary, aes(x = year_split2, 
                          y =  prop, 
                          fill = CountryCode2)) +
   geom_bar(stat = "identity",
            #col = "black",
            position = position_stack()) +
   geom_text(data = country_summary[country_summary$CountryCode2 %in% c("Northern America", "Northern Europe", "Asia", "Western Europe"),],
-            aes(x = year_split,
+            aes(x = year_split2,
                 y = pos,
                 label = paste0(prop, "%")),
             color = c("white", "white", "white", "white",
@@ -219,8 +227,7 @@ bar_countries <-
   labs(title = "A: Author Affiliation",
        x = "",
        y = "") + 
-  scale_x_discrete(limits = c("Pre-OS","After-OS"),
-                   label = c("Pre-RC", "Post-RC")) +
+  scale_x_discrete(limits = c("Pre-RC","Post-RC")) +
   scale_y_continuous(breaks = c(0, 25, 50, 75, 100), 
                      labels = c("0%", "25%", "50%", "75%", "100%"),
                      position = "right") + 
@@ -236,8 +243,7 @@ bar_countries <-
     plot.title = element_text(face = "bold",
                               size = 14,
                               hjust = 1),
-    plot.subtitle = element_text(size = 12),
-    plot.title.position = "plot"
+    plot.subtitle = element_text(size = 12)
   ) 
 ```
 
@@ -408,7 +414,16 @@ apa_table(table1,
 
 ```{r figure1, echo = FALSE, include = TRUE, fig.cap = "Figure 1. A: The proportion of first author affiliation's country collapsing all small categories into other. B: The proportion of languages examined in these studies collapsing all other languages together. Cross Linguistic samples represented studies with five or more languages."}
 # figure 1 
-bar_countries  + bar_languages + plot_layout(widths = c(1.25, 1.25))
+bar_countries + bar_languages + plot_layout(widths = c(4,3))
+
+saved <- bar_countries + bar_languages + plot_layout(widths = c(4,3))
+ggsave(filename = "figure/figure1.png",
+       plot = saved, 
+       device = "png",
+       width = 8,
+       height = 4,
+       units = "in", 
+       dpi = 500)
 ```
 
 While the difference between articles published in our early and our late time window have similar sample properties, there are general noteworthy asymmetries in our sample. First and foremost, we notice a very strong anglocentric bias for both the host country of the corresponding author and the language under investigation, as shown in Figure 1. A large portion of studies are conducted with first author affiliations in the United States, United Kingdom, or Europe, and the primary language under investigation is English. While these properties may be tied to the sampling of English-written articles, these asymmetries quantify often articulated concerns that claims about human language are too often based on a small set of languages, limiting their generalisability (e.g. Majid & Levinson 2010, Goddard & Wierzbicka 2014, Levisen 2018). COMMENT ON LACK OF DIVERSITY IN RESEARCH CULTURE AND ORIGINS.
@@ -748,7 +763,7 @@ ggplot(fig2_data2, aes(y = EmpiricalStudyData,
         panel.spacing.y = unit(1.5, "lines")
     )
 
-ggsave(filename = "figure2.png",
+ggsave(filename = "figure/figure2.png",
        plot = fig2,
        device = "png",
        width = 240, 
@@ -837,7 +852,7 @@ ggplot(fig2_data2, aes(y = EmpiricalStudyData,
         panel.spacing.y = unit(1.5, "lines")
     )
 
-ggsave(filename = "figure2b.png",
+ggsave(filename = "figure/figure2b.png",
        plot = fig2b,
        device = "png",
        width = 300, 
