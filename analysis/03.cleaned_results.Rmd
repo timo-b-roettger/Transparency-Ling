@@ -150,7 +150,9 @@ bar_languages <-
                          fill = language_new)) +
   geom_bar(stat = "identity",
            #col = "black",
-           position = position_stack()) +
+           position = position_stack(),
+           color = "black", 
+           size = 0.1) +
   geom_text(data = freq_split[freq_split$language_new %in% c("English", "Other", "Universal"),],
             aes(x = year_split2,
                 y = pos,
@@ -217,7 +219,9 @@ bar_countries <-
                          fill = CountryCode2)) +
   geom_bar(stat = "identity",
            #col = "black",
-           position = position_stack()) +
+           position = position_stack(),
+           color = "black", 
+           size = 0.1) +
   geom_text(data = country_summary[country_summary$CountryCode2 %in% c("Northern America", "Northern Europe", "Asia", "Western Europe"),],
             aes(x = year_split2,
                 y = pos,
@@ -734,7 +738,7 @@ ggplot(fig2_data2, aes(y = EmpiricalStudyData,
   guides(color = "none",
          fill = guide_legend(reverse = TRUE)) +
   scale_color_manual(values = c("black", "black")) +
-  scale_fill_manual(values = c("#66c2a5", "lightgrey")) +
+  scale_fill_manual(values = c("#66c2a5", "#cc0033")) +
   scale_x_continuous(limits = c(0, 100),
                      expand = c(0,0),
                      breaks = c(0,20,40,60,80,100),
