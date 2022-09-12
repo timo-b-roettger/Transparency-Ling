@@ -890,9 +890,6 @@ round(table(langDF$language, useNA = "ifany") / nrow(langDF) * 100, 1)
 table(DF_filtered$CountryAuthor, useNA = "ifany")
 round(table(DF_filtered$CountryAuthor, useNA = "ifany") / nrow(DF_filtered) * 100, 1)
 
-# overall
-fig2_data2 %>% select(year_split, EmpiricalStudyData, n, prop, available) %>% write.csv(., file = "final_percents.csv", row.names = F)
-
 # that english thing
 langDF$compare <- "other"
 langDF$compare[langDF$language == "english"] <- "english"
@@ -902,4 +899,26 @@ langDF$compare[langDF$language %in% c("german", "dutch", "danish",
                                       "polish", "czech", "russian")] <- "indo"
 table(langDF$compare) / nrow(langDF) * 100
 ```
+
+```{r fig2-numbers, echo = T, include = T}
+# overall
+fig2_data2 %>% 
+  select(year_split, EmpiricalStudyData, Type, n, prop, available) %>% 
+  print(., n = nrow(fig2_data2))
+
+# summed by year 
+fig2_data2 %>% 
+  group_by(year_split, Type, available) %>% 
+  summarise(total_n = sum(n), .groups = "keep") %>% 
+  group_by(year_split, Type) %>% 
+  mutate(total_prop = total_n / sum(total_n) * 100)
+
+# summed by study data 
+fig2_data2 %>% 
+  group_by(EmpiricalStudyData, Type, available) %>% 
+  summarise(total_n = sum(n), .groups = "keep") %>% 
+  group_by(EmpiricalStudyData, Type) %>% 
+  mutate(total_prop = total_n / sum(total_n) * 100)
+```
+
 
