@@ -416,7 +416,7 @@ apa_table(table1,
           note = "All values are raw counts on the original sample size, except JIF which represents the mean and standard deviation. Empirical study data type was categorized after examination of the results.")
 ```
 
-```{r figure1, echo = FALSE, include = TRUE, fig.cap = "Figure 1. A: The proportion of first author affiliation's country collapsing all small categories into other. B: The proportion of languages examined in these studies collapsing all other languages together. Cross Linguistic samples represented studies with five or more languages."}
+```{r figure1, echo = FALSE, include = TRUE, fig.cap = "Figure 1. A: The proportion of first author affiliation’s country binned into United Nations Subregions collapsing all Asian subregions together and all other non-visualized regions as the other category. B: The proportion of languages examined in these studies collapsing all other languages together. Cross Linguistic samples represented studies with five or more languages."}
 # figure 1 
 bar_countries + bar_languages + plot_layout(widths = c(4,3))
 
