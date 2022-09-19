@@ -919,6 +919,14 @@ fig2_data2 %>%
   summarise(total_n = sum(n), .groups = "keep") %>% 
   group_by(EmpiricalStudyData, Type) %>% 
   mutate(total_prop = total_n / sum(total_n) * 100)
+
+# completely overall
+
+fig2_data2 %>% 
+  group_by(Type, available) %>% 
+  summarise(total_n = sum(n), .groups = "keep") %>% 
+  group_by(Type) %>% 
+  mutate(total_prop = total_n / sum(total_n) * 100)
 ```
 
 
