@@ -418,9 +418,9 @@ apa_table(table1,
 
 ```{r figure1, echo = FALSE, include = TRUE, fig.cap = "Figure 1. A: The proportion of first author affiliation’s country binned into United Nations Subregions collapsing all Asian subregions together and all other non-visualized regions as the other category. B: The proportion of languages examined in these studies collapsing all other languages together. Cross Linguistic samples represented studies with five or more languages."}
 # figure 1 
-bar_countries + bar_languages + plot_layout(widths = c(4,3))
+bar_countries + bar_languages + plot_layout(widths = c(3,3))
 
-saved <- bar_countries + bar_languages + plot_layout(widths = c(4,3))
+saved <- bar_countries + bar_languages + plot_layout(widths = c(3,3))
 ggsave(filename = "figure/figure1.png",
        plot = saved, 
        device = "png",
