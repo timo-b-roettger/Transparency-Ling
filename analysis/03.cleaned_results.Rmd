@@ -953,8 +953,22 @@ fig2_data2 %>%
   group_by(Type) %>% 
   mutate(total_prop = total_n / sum(total_n) * 100)
 
-# open access statistics after fixing coding issues on the included dataset by year 
+# open access statistics after fixing coding issues on the included dataset by year - whole dataset 
+openaccessDF_all %>% 
+  group_by(open_access, year_split) %>% 
+  summarize(total_n = n(), .groups = "keep") %>% 
+  group_by(open_access) %>% 
+  mutate(open_prop = total_n / sum(total_n) * 100)
+
+# included dataset
 openaccessDF_used %>% 
+  group_by(open_access, year_split) %>% 
+  summarize(total_n = n(), .groups = "keep") %>% 
+  group_by(open_access) %>% 
+  mutate(open_prop = total_n / sum(total_n) * 100)
+
+# empirical dataset
+openaccessDF_filtered %>% 
   group_by(open_access, year_split) %>% 
   summarize(total_n = n(), .groups = "keep") %>% 
   group_by(open_access) %>% 

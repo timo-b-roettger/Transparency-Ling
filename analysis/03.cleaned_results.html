@@ -758,7 +758,23 @@ fig2_data2 %&gt;%
 ## 6 &quot;Processed Data &quot; &quot; Not available&quot;     348     96.7  
 ## 7 &quot;Analysis &quot;       &quot; Available&quot;           3      0.833
 ## 8 &quot;Analysis &quot;       &quot; Not available&quot;     357     99.2</code></pre>
-<pre class="r"><code># open access statistics after fixing coding issues on the included dataset by year 
+<pre class="r"><code># open access statistics after fixing coding issues on the included dataset by year - whole dataset 
+openaccessDF_all %&gt;% 
+  group_by(open_access, year_split) %&gt;% 
+  summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
+  group_by(open_access) %&gt;% 
+  mutate(open_prop = total_n / sum(total_n) * 100)</code></pre>
+<pre><code>## # A tibble: 6 × 4
+## # Groups:   open_access [3]
+##   open_access year_split total_n open_prop
+##   &lt;chr&gt;       &lt;chr&gt;        &lt;int&gt;     &lt;dbl&gt;
+## 1 no          After-OS       144      42.1
+## 2 no          Pre-OS         198      57.9
+## 3 unknown     After-OS        29      61.7
+## 4 unknown     Pre-OS          18      38.3
+## 5 yes         After-OS       127      60.2
+## 6 yes         Pre-OS          84      39.8</code></pre>
+<pre class="r"><code># included dataset
 openaccessDF_used %&gt;% 
   group_by(open_access, year_split) %&gt;% 
   summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
@@ -774,6 +790,22 @@ openaccessDF_used %&gt;%
 ## 4 unknown     Pre-OS          14      40  
 ## 5 yes         After-OS       115      59.9
 ## 6 yes         Pre-OS          77      40.1</code></pre>
+<pre class="r"><code># empirical dataset
+openaccessDF_filtered %&gt;% 
+  group_by(open_access, year_split) %&gt;% 
+  summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
+  group_by(open_access) %&gt;% 
+  mutate(open_prop = total_n / sum(total_n) * 100)</code></pre>
+<pre><code>## # A tibble: 6 × 4
+## # Groups:   open_access [3]
+##   open_access year_split total_n open_prop
+##   &lt;chr&gt;       &lt;chr&gt;        &lt;int&gt;     &lt;dbl&gt;
+## 1 no          After-OS        93      44.7
+## 2 no          Pre-OS         115      55.3
+## 3 unknown     After-OS        13      56.5
+## 4 unknown     Pre-OS          10      43.5
+## 5 yes         After-OS        81      62.8
+## 6 yes         Pre-OS          48      37.2</code></pre>
 <pre class="r"><code># replication statistics by year 
 # note that we double checked these and one was not a replication study and was miscoded 
 DF_filtered_ps$Replication[DF_filtered_ps$Replication == &quot;&quot;] &lt;- &quot;There is no clear statement that the article reports a replication study (or studies)&quot;
