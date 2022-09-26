@@ -956,35 +956,35 @@ fig2_data2 %>%
   group_by(Type) %>% 
   mutate(total_prop = total_n / sum(total_n) * 100)
 
-# open access statistics after fixing coding issues on the included dataset by year - whole dataset 
+# open access statistics after fixing coding issues on the initial dataset (n = 600) by year 
 openaccessDF_all %>% 
   group_by(open_access, year_split) %>% 
   summarize(total_n = n(), .groups = "keep") %>% 
   group_by(open_access) %>% 
   mutate(open_prop = total_n / sum(total_n) * 100)
 
-# included dataset
+# open access statistics on the included dataset (n = 519) by year 
 openaccessDF_used %>% 
   group_by(open_access, year_split) %>% 
   summarize(total_n = n(), .groups = "keep") %>% 
   group_by(open_access) %>% 
   mutate(open_prop = total_n / sum(total_n) * 100)
 
-# empirical dataset
+# open access statistics on the included articles reporting empirical studies (n = 360) by year
 openaccessDF_filtered %>% 
   group_by(open_access, year_split) %>% 
   summarize(total_n = n(), .groups = "keep") %>% 
   group_by(open_access) %>% 
   mutate(open_prop = total_n / sum(total_n) * 100)
 
-# replication statistics by year 
+# replication statistics on the included articles reporting empirical studies (n = 360) by year
 # note that we double checked these and one was not a replication study and was miscoded 
 DF_filtered_ps$Replication[DF_filtered_ps$Replication == ""] <- "There is no clear statement that the article reports a replication study (or studies)"
 DF_filtered_ps %>% 
   group_by(Replication, year_split) %>% 
   summarize(total_n = n(), .groups = "keep") 
 
-# coi statistics by year
+# coi statistics on the included dataset (n = 519) by year 
 DF_filtered$COI[DF_filtered$COI == ""] <- "No, there is no conflict of interest statement"
 DF_filtered %>% 
   group_by(COI, year_split) %>% 
