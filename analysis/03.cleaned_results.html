@@ -364,7 +364,7 @@ pre code {
 
 <h1 class="title toc-ignore">Cleaned Results</h1>
 <h4 class="author">Erin M. Buchanan</h4>
-<h4 class="date">Last Knitted: 2022-09-22</h4>
+<h4 class="date">Last Knitted: 2022-09-26</h4>
 
 </div>
 
@@ -429,15 +429,15 @@ above (9.7%), not being accessible (2.2%) or other reasons (1.5%).</p>
 </tr>
 <tr class="odd">
 <td align="left">Study Design - Empirical</td>
-<td align="left">369</td>
+<td align="left">363</td>
 <td align="left">175</td>
-<td align="left">194</td>
+<td align="left">188</td>
 </tr>
 <tr class="even">
 <td align="left">Study Design - Not Empirical</td>
-<td align="left">155</td>
-<td align="left">89</td>
-<td align="left">66</td>
+<td align="left">152</td>
+<td align="left">87</td>
+<td align="left">65</td>
 </tr>
 <tr class="odd">
 <td align="left">Study Design - Meta-Analysis</td>
@@ -447,15 +447,15 @@ above (9.7%), not being accessible (2.2%) or other reasons (1.5%).</p>
 </tr>
 <tr class="even">
 <td align="left">Study Data - Primary</td>
-<td align="left">269</td>
-<td align="left">124</td>
-<td align="left">145</td>
+<td align="left">263</td>
+<td align="left">123</td>
+<td align="left">140</td>
 </tr>
 <tr class="odd">
 <td align="left">Study Data - Secondary</td>
-<td align="left">101</td>
-<td align="left">52</td>
-<td align="left">49</td>
+<td align="left">97</td>
+<td align="left">50</td>
+<td align="left">47</td>
 </tr>
 <tr class="even">
 <td align="left">Study Data - Other</td>
@@ -650,7 +650,7 @@ no conflict of interest.</p>
 </div>
 <div id="discussion" class="section level2">
 <h2>Discussion</h2>
-<pre class="r"><code># overall
+<pre class="r"><code># overall statistics calculated by year, study data type, type of transparency measure 
 fig2_data2 %&gt;% 
   select(year_split, EmpiricalStudyData, Type, n, prop, available) %&gt;% 
   print(., n = nrow(fig2_data2))</code></pre>
@@ -689,7 +689,7 @@ fig2_data2 %&gt;%
 ## 29 Pre-RC (2008-09)    Primary            &quot;Analysis &quot;         123 100   &quot; Not a…
 ## 30 Pre-RC (2008-09)    Secondary          &quot;Analysis &quot;          50 100   &quot; Not a…
 ## # … with abbreviated variable name ¹​available</code></pre>
-<pre class="r"><code># summed by year 
+<pre class="r"><code># statistics calculated by year, type of transparency measure (summed over study data type)
 fig2_data2 %&gt;% 
   group_by(year_split, Type, available) %&gt;% 
   summarise(total_n = sum(n), .groups = &quot;keep&quot;) %&gt;% 
@@ -714,7 +714,7 @@ fig2_data2 %&gt;%
 ## 13 Post-RC (2018-2019) &quot;Processed Data &quot; &quot; Not available&quot;     178      95.2 
 ## 14 Post-RC (2018-2019) &quot;Analysis &quot;       &quot; Available&quot;           3       1.60
 ## 15 Post-RC (2018-2019) &quot;Analysis &quot;       &quot; Not available&quot;     184      98.4</code></pre>
-<pre class="r"><code># summed by study data 
+<pre class="r"><code># statistics calculated by study data type, transparency measured (summed over years) 
 fig2_data2 %&gt;% 
   group_by(EmpiricalStudyData, Type, available) %&gt;% 
   summarise(total_n = sum(n), .groups = &quot;keep&quot;) %&gt;% 
@@ -740,8 +740,7 @@ fig2_data2 %&gt;%
 ## 14 Primary            &quot;Processed Data &quot; &quot; Not available&quot;     257     97.7  
 ## 15 Primary            &quot;Analysis &quot;       &quot; Available&quot;           1      0.380
 ## 16 Primary            &quot;Analysis &quot;       &quot; Not available&quot;     262     99.6</code></pre>
-<pre class="r"><code># completely overall
-
+<pre class="r"><code># statistics calculated by study data type (summed over transparency measures and years )
 fig2_data2 %&gt;% 
   group_by(Type, available) %&gt;% 
   summarise(total_n = sum(n), .groups = &quot;keep&quot;) %&gt;% 
@@ -759,6 +758,53 @@ fig2_data2 %&gt;%
 ## 6 &quot;Processed Data &quot; &quot; Not available&quot;     348     96.7  
 ## 7 &quot;Analysis &quot;       &quot; Available&quot;           3      0.833
 ## 8 &quot;Analysis &quot;       &quot; Not available&quot;     357     99.2</code></pre>
+<pre class="r"><code># open access statistics after fixing coding issues on the included dataset by year 
+openaccessDF_used %&gt;% 
+  group_by(open_access, year_split) %&gt;% 
+  summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
+  group_by(open_access) %&gt;% 
+  mutate(open_prop = total_n / sum(total_n) * 100)</code></pre>
+<pre><code>## # A tibble: 6 × 4
+## # Groups:   open_access [3]
+##   open_access year_split total_n open_prop
+##   &lt;chr&gt;       &lt;chr&gt;        &lt;int&gt;     &lt;dbl&gt;
+## 1 no          After-OS       119      40.8
+## 2 no          Pre-OS         173      59.2
+## 3 unknown     After-OS        21      60  
+## 4 unknown     Pre-OS          14      40  
+## 5 yes         After-OS       115      59.9
+## 6 yes         Pre-OS          77      40.1</code></pre>
+<pre class="r"><code># replication statistics by year 
+# note that we double checked these and one was not a replication study and was miscoded 
+DF_filtered_ps$Replication[DF_filtered_ps$Replication == &quot;&quot;] &lt;- &quot;There is no clear statement that the article reports a replication study (or studies)&quot;
+DF_filtered_ps %&gt;% 
+  group_by(Replication, year_split) %&gt;% 
+  summarize(total_n = n(), .groups = &quot;keep&quot;) </code></pre>
+<pre><code>## # A tibble: 4 × 3
+## # Groups:   Replication, year_split [4]
+##   Replication                                                    year_…¹ total_n
+##   &lt;chr&gt;                                                          &lt;chr&gt;     &lt;int&gt;
+## 1 The article claims to report a replication study (or studies)  After-…       1
+## 2 The article claims to report a replication study (or studies)  Pre-OS        4
+## 3 There is no clear statement that the article reports a replic… After-…     186
+## 4 There is no clear statement that the article reports a replic… Pre-OS      169
+## # … with abbreviated variable name ¹​year_split</code></pre>
+<pre class="r"><code># coi statistics by year
+DF_filtered$COI[DF_filtered$COI == &quot;&quot;] &lt;- &quot;No, there is no conflict of interest statement&quot;
+DF_filtered %&gt;% 
+  group_by(COI, year_split) %&gt;% 
+  summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
+  group_by(COI) %&gt;% 
+  mutate(COI_prop = total_n / sum(total_n) * 100)</code></pre>
+<pre><code>## # A tibble: 4 × 4
+## # Groups:   COI [2]
+##   COI                                                    year_…¹ total_n COI_p…²
+##   &lt;chr&gt;                                                  &lt;chr&gt;     &lt;int&gt;   &lt;dbl&gt;
+## 1 No, there is no conflict of interest statement         After-…     209    44.8
+## 2 No, there is no conflict of interest statement         Pre-OS      258    55.2
+## 3 Yes, the statement says that there is no conflict of … After-…      46    88.5
+## 4 Yes, the statement says that there is no conflict of … Pre-OS        6    11.5
+## # … with abbreviated variable names ¹​year_split, ²​COI_prop</code></pre>
 </div>
 
 

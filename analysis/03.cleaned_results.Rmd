@@ -346,6 +346,11 @@ DF$EmpiricalStudyData <- gsub(",|  ", " ", DF$EmpiricalStudyData)
 DF_filtered <- DF %>% 
   filter(ArticleIssues == "There are no issues") %>% 
   filter(Agree == TRUE) 
+
+# for the table
+DF_filtered_ps <- DF_filtered %>% 
+  #filter(EmpiricalStudyData != "Other") %>% 
+  filter(StudyType == "Empirical data (specify the study type in the next step)")
 ```
 
 ```{r table1, results = 'asis', include = TRUE, echo = FALSE}
@@ -369,12 +374,12 @@ table1 <- data.frame(
     paste(round(mean(JIF_new$JIF), 2), " (", round(sd(JIF_new$JIF), 2), ") ", 
           "Mdn = ", round(median(JIF_new$JIF),2), sep = ""),
     length(unique(DF$CountryAuthor)),
-    sum(grepl("^Empirical", DF$StudyType)), 
-    sum(grepl("^No empirical", DF$StudyType)), 
-    sum(grepl("^Data", DF$StudyType)),
-    sum(grepl("^Primary", DF$EmpiricalStudyData)), 
-    sum(grepl("^Second", DF$EmpiricalStudyData)), 
-    sum(grepl("^Other", DF$EmpiricalStudyData))
+    sum(grepl("^Empirical", DF_filtered$StudyType)), 
+    sum(grepl("^No empirical", DF_filtered$StudyType)), 
+    sum(grepl("^Data", DF_filtered$StudyType)),
+    sum(grepl("^Primary", DF_filtered_ps$EmpiricalStudyData)), 
+    sum(grepl("^Second", DF_filtered_ps$EmpiricalStudyData)), 
+    sum(grepl("^Other", DF_filtered_ps$EmpiricalStudyData))
     ),
   ## pre stats 
   "Pre-OS" = c(
@@ -385,12 +390,12 @@ table1 <- data.frame(
     paste(round(mean(JIF_new$JIF[JIF_new$year_split == "Pre-OS"]), 2), " (", round(sd(JIF_new$JIF[JIF_new$year_split == "Pre-OS"]), 2), ") ", 
           "Mdn = ", round(median(JIF_new$JIF[JIF_new$year_split == "Pre-OS"]),2), sep = ""),
     length(unique(DF$CountryAuthor[DF$year_split == "Pre-OS"])),
-    sum(grepl("^Empirical", DF$StudyType[DF$year_split == "Pre-OS"])), 
-    sum(grepl("^No empirical", DF$StudyType[DF$year_split == "Pre-OS"])), 
-    sum(grepl("^Data", DF$StudyType[DF$year_split == "Pre-OS"])),
-    sum(grepl("^Primary", DF$EmpiricalStudyData[DF$year_split == "Pre-OS"])), 
-    sum(grepl("^Second", DF$EmpiricalStudyData[DF$year_split == "Pre-OS"])), 
-    sum(grepl("^Other", DF$EmpiricalStudyData[DF$year_split == "Pre-OS"]))
+    sum(grepl("^Empirical", DF_filtered$StudyType[DF_filtered$year_split == "Pre-OS"])), 
+    sum(grepl("^No empirical", DF_filtered$StudyType[DF_filtered$year_split == "Pre-OS"])), 
+    sum(grepl("^Data", DF_filtered$StudyType[DF_filtered$year_split == "Pre-OS"])),
+    sum(grepl("^Primary", DF_filtered_ps$EmpiricalStudyData[DF_filtered_ps$year_split == "Pre-OS"])), 
+    sum(grepl("^Second", DF_filtered_ps$EmpiricalStudyData[DF_filtered_ps$year_split == "Pre-OS"])), 
+    sum(grepl("^Other", DF_filtered_ps$EmpiricalStudyData[DF_filtered_ps$year_split == "Pre-OS"]))
     ),
   
   ## post stats 
@@ -402,12 +407,12 @@ table1 <- data.frame(
      paste(round(mean(JIF_new$JIF[JIF_new$year_split == "After-OS"]), 2), " (", round(sd(JIF_new$JIF[JIF_new$year_split == "After-OS"]), 2), ") ", 
           "Mdn = ", round(median(JIF_new$JIF[JIF_new$year_split == "After-OS"]),2), sep = ""),
      length(unique(DF$CountryAuthor[DF$year_split == "After-OS"])),
-     sum(grepl("^Empirical", DF$StudyType[DF$year_split == "After-OS"])), 
-     sum(grepl("^No empirical", DF$StudyType[DF$year_split == "After-OS"])), 
-     sum(grepl("^Data", DF$StudyType[DF$year_split == "After-OS"])),
-     sum(grepl("^Primary", DF$EmpiricalStudyData[DF$year_split == "After-OS"])), 
-     sum(grepl("^Second", DF$EmpiricalStudyData[DF$year_split == "After-OS"])), 
-     sum(grepl("^Other", DF$EmpiricalStudyData[DF$year_split == "After-OS"]))
+     sum(grepl("^Empirical", DF_filtered$StudyType[DF_filtered$year_split == "After-OS"])), 
+     sum(grepl("^No empirical", DF_filtered$StudyType[DF_filtered$year_split == "After-OS"])), 
+     sum(grepl("^Data", DF_filtered$StudyType[DF_filtered$year_split == "After-OS"])),
+     sum(grepl("^Primary", DF_filtered_ps$EmpiricalStudyData[DF_filtered_ps$year_split == "After-OS"])), 
+     sum(grepl("^Second", DF_filtered_ps$EmpiricalStudyData[DF_filtered_ps$year_split == "After-OS"])), 
+     sum(grepl("^Other", DF_filtered_ps$EmpiricalStudyData[DF_filtered_ps$year_split == "After-OS"]))
      )
 )
 
@@ -922,32 +927,53 @@ table(langDF$compare) / nrow(langDF) * 100
 ```
 
 ```{r fig2-numbers, echo = T, include = T}
-# overall
+# overall statistics calculated by year, study data type, type of transparency measure 
 fig2_data2 %>% 
   select(year_split, EmpiricalStudyData, Type, n, prop, available) %>% 
   print(., n = nrow(fig2_data2))
 
-# summed by year 
+# statistics calculated by year, type of transparency measure (summed over study data type)
 fig2_data2 %>% 
   group_by(year_split, Type, available) %>% 
   summarise(total_n = sum(n), .groups = "keep") %>% 
   group_by(year_split, Type) %>% 
   mutate(total_prop = total_n / sum(total_n) * 100)
 
-# summed by study data 
+# statistics calculated by study data type, transparency measured (summed over years) 
 fig2_data2 %>% 
   group_by(EmpiricalStudyData, Type, available) %>% 
   summarise(total_n = sum(n), .groups = "keep") %>% 
   group_by(EmpiricalStudyData, Type) %>% 
   mutate(total_prop = total_n / sum(total_n) * 100)
 
-# completely overall
-
+# statistics calculated by study data type (summed over transparency measures and years )
 fig2_data2 %>% 
   group_by(Type, available) %>% 
   summarise(total_n = sum(n), .groups = "keep") %>% 
   group_by(Type) %>% 
   mutate(total_prop = total_n / sum(total_n) * 100)
+
+# open access statistics after fixing coding issues on the included dataset by year 
+openaccessDF_used %>% 
+  group_by(open_access, year_split) %>% 
+  summarize(total_n = n(), .groups = "keep") %>% 
+  group_by(open_access) %>% 
+  mutate(open_prop = total_n / sum(total_n) * 100)
+
+# replication statistics by year 
+# note that we double checked these and one was not a replication study and was miscoded 
+DF_filtered_ps$Replication[DF_filtered_ps$Replication == ""] <- "There is no clear statement that the article reports a replication study (or studies)"
+DF_filtered_ps %>% 
+  group_by(Replication, year_split) %>% 
+  summarize(total_n = n(), .groups = "keep") 
+
+# coi statistics by year
+DF_filtered$COI[DF_filtered$COI == ""] <- "No, there is no conflict of interest statement"
+DF_filtered %>% 
+  group_by(COI, year_split) %>% 
+  summarize(total_n = n(), .groups = "keep") %>% 
+  group_by(COI) %>% 
+  mutate(COI_prop = total_n / sum(total_n) * 100)
 ```
 
 
