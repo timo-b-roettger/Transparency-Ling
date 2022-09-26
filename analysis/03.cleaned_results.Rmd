@@ -581,7 +581,10 @@ rawdata_types <- dataDF %>%
   group_by(data, year_split, EmpiricalStudyData) %>% 
   summarize(n = n(), .groups = "keep") %>% 
   group_by(year_split, EmpiricalStudyData) %>% 
-  mutate(prop = round(n / sum(n)*100, 1))
+  mutate(prop = round(n / sum(n)*100, 1)) %>% 
+  group_by(data) %>% 
+  mutate(overall = sum(n), 
+         prop_overall = sum(n) / nrow(dataDF))
 
 # code availability of raw data
 DF_filtered_ps$RawDataAvl[DF_filtered_ps$RawDataAvl == ""] <- NA
