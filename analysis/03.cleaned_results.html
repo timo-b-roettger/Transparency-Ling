@@ -758,7 +758,7 @@ fig2_data2 %&gt;%
 ## 6 &quot;Processed Data &quot; &quot; Not available&quot;     348     96.7  
 ## 7 &quot;Analysis &quot;       &quot; Available&quot;           3      0.833
 ## 8 &quot;Analysis &quot;       &quot; Not available&quot;     357     99.2</code></pre>
-<pre class="r"><code># open access statistics after fixing coding issues on the included dataset by year - whole dataset 
+<pre class="r"><code># open access statistics after fixing coding issues on the initial dataset (n = 600) by year 
 openaccessDF_all %&gt;% 
   group_by(open_access, year_split) %&gt;% 
   summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
@@ -774,7 +774,7 @@ openaccessDF_all %&gt;%
 ## 4 unknown     Pre-OS          18      38.3
 ## 5 yes         After-OS       127      60.2
 ## 6 yes         Pre-OS          84      39.8</code></pre>
-<pre class="r"><code># included dataset
+<pre class="r"><code># open access statistics on the included dataset (n = 519) by year 
 openaccessDF_used %&gt;% 
   group_by(open_access, year_split) %&gt;% 
   summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
@@ -790,7 +790,7 @@ openaccessDF_used %&gt;%
 ## 4 unknown     Pre-OS          14      40  
 ## 5 yes         After-OS       115      59.9
 ## 6 yes         Pre-OS          77      40.1</code></pre>
-<pre class="r"><code># empirical dataset
+<pre class="r"><code># open access statistics on the included articles reporting empirical studies (n = 360) by year
 openaccessDF_filtered %&gt;% 
   group_by(open_access, year_split) %&gt;% 
   summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
@@ -806,7 +806,7 @@ openaccessDF_filtered %&gt;%
 ## 4 unknown     Pre-OS          10      43.5
 ## 5 yes         After-OS        81      62.8
 ## 6 yes         Pre-OS          48      37.2</code></pre>
-<pre class="r"><code># replication statistics by year 
+<pre class="r"><code># replication statistics on the included articles reporting empirical studies (n = 360) by year
 # note that we double checked these and one was not a replication study and was miscoded 
 DF_filtered_ps$Replication[DF_filtered_ps$Replication == &quot;&quot;] &lt;- &quot;There is no clear statement that the article reports a replication study (or studies)&quot;
 DF_filtered_ps %&gt;% 
@@ -821,7 +821,7 @@ DF_filtered_ps %&gt;%
 ## 3 There is no clear statement that the article reports a replic… After-…     186
 ## 4 There is no clear statement that the article reports a replic… Pre-OS      169
 ## # … with abbreviated variable name ¹​year_split</code></pre>
-<pre class="r"><code># coi statistics by year
+<pre class="r"><code># coi statistics on the included dataset (n = 519) by year 
 DF_filtered$COI[DF_filtered$COI == &quot;&quot;] &lt;- &quot;No, there is no conflict of interest statement&quot;
 DF_filtered %&gt;% 
   group_by(COI, year_split) %&gt;% 
