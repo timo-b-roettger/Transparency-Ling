@@ -960,21 +960,21 @@ fig2_data2 %>%
 openaccessDF_all %>% 
   group_by(open_access, year_split) %>% 
   summarize(total_n = n(), .groups = "keep") %>% 
-  group_by(open_access) %>% 
+  group_by(year_split) %>% 
   mutate(open_prop = total_n / sum(total_n) * 100)
 
 # open access statistics on the included dataset (n = 519) by year 
 openaccessDF_used %>% 
   group_by(open_access, year_split) %>% 
   summarize(total_n = n(), .groups = "keep") %>% 
-  group_by(open_access) %>% 
+  group_by(year_split) %>% 
   mutate(open_prop = total_n / sum(total_n) * 100)
 
 # open access statistics on the included articles reporting empirical studies (n = 360) by year
 openaccessDF_filtered %>% 
   group_by(open_access, year_split) %>% 
   summarize(total_n = n(), .groups = "keep") %>% 
-  group_by(open_access) %>% 
+  group_by(year_split) %>% 
   mutate(open_prop = total_n / sum(total_n) * 100)
 
 # replication statistics on the included articles reporting empirical studies (n = 360) by year

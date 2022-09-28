@@ -364,7 +364,7 @@ pre code {
 
 <h1 class="title toc-ignore">Cleaned Results</h1>
 <h4 class="author">Erin M. Buchanan</h4>
-<h4 class="date">Last Knitted: 2022-09-26</h4>
+<h4 class="date">Last Knitted: 2022-09-28</h4>
 
 </div>
 
@@ -762,50 +762,50 @@ fig2_data2 %&gt;%
 openaccessDF_all %&gt;% 
   group_by(open_access, year_split) %&gt;% 
   summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
-  group_by(open_access) %&gt;% 
+  group_by(year_split) %&gt;% 
   mutate(open_prop = total_n / sum(total_n) * 100)</code></pre>
 <pre><code>## # A tibble: 6 × 4
-## # Groups:   open_access [3]
+## # Groups:   year_split [2]
 ##   open_access year_split total_n open_prop
 ##   &lt;chr&gt;       &lt;chr&gt;        &lt;int&gt;     &lt;dbl&gt;
-## 1 no          After-OS       144      42.1
-## 2 no          Pre-OS         198      57.9
-## 3 unknown     After-OS        29      61.7
-## 4 unknown     Pre-OS          18      38.3
-## 5 yes         After-OS       127      60.2
-## 6 yes         Pre-OS          84      39.8</code></pre>
+## 1 no          After-OS       144     48   
+## 2 no          Pre-OS         198     66   
+## 3 unknown     After-OS        29      9.67
+## 4 unknown     Pre-OS          18      6   
+## 5 yes         After-OS       127     42.3 
+## 6 yes         Pre-OS          84     28</code></pre>
 <pre class="r"><code># open access statistics on the included dataset (n = 519) by year 
 openaccessDF_used %&gt;% 
   group_by(open_access, year_split) %&gt;% 
   summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
-  group_by(open_access) %&gt;% 
+  group_by(year_split) %&gt;% 
   mutate(open_prop = total_n / sum(total_n) * 100)</code></pre>
 <pre><code>## # A tibble: 6 × 4
-## # Groups:   open_access [3]
+## # Groups:   year_split [2]
 ##   open_access year_split total_n open_prop
 ##   &lt;chr&gt;       &lt;chr&gt;        &lt;int&gt;     &lt;dbl&gt;
-## 1 no          After-OS       119      40.8
-## 2 no          Pre-OS         173      59.2
-## 3 unknown     After-OS        21      60  
-## 4 unknown     Pre-OS          14      40  
-## 5 yes         After-OS       115      59.9
-## 6 yes         Pre-OS          77      40.1</code></pre>
+## 1 no          After-OS       119     46.7 
+## 2 no          Pre-OS         173     65.5 
+## 3 unknown     After-OS        21      8.24
+## 4 unknown     Pre-OS          14      5.30
+## 5 yes         After-OS       115     45.1 
+## 6 yes         Pre-OS          77     29.2</code></pre>
 <pre class="r"><code># open access statistics on the included articles reporting empirical studies (n = 360) by year
 openaccessDF_filtered %&gt;% 
   group_by(open_access, year_split) %&gt;% 
   summarize(total_n = n(), .groups = &quot;keep&quot;) %&gt;% 
-  group_by(open_access) %&gt;% 
+  group_by(year_split) %&gt;% 
   mutate(open_prop = total_n / sum(total_n) * 100)</code></pre>
 <pre><code>## # A tibble: 6 × 4
-## # Groups:   open_access [3]
+## # Groups:   year_split [2]
 ##   open_access year_split total_n open_prop
 ##   &lt;chr&gt;       &lt;chr&gt;        &lt;int&gt;     &lt;dbl&gt;
-## 1 no          After-OS        93      44.7
-## 2 no          Pre-OS         115      55.3
-## 3 unknown     After-OS        13      56.5
-## 4 unknown     Pre-OS          10      43.5
-## 5 yes         After-OS        81      62.8
-## 6 yes         Pre-OS          48      37.2</code></pre>
+## 1 no          After-OS        93     49.7 
+## 2 no          Pre-OS         115     66.5 
+## 3 unknown     After-OS        13      6.95
+## 4 unknown     Pre-OS          10      5.78
+## 5 yes         After-OS        81     43.3 
+## 6 yes         Pre-OS          48     27.7</code></pre>
 <pre class="r"><code># replication statistics on the included articles reporting empirical studies (n = 360) by year
 # note that we double checked these and one was not a replication study and was miscoded 
 DF_filtered_ps$Replication[DF_filtered_ps$Replication == &quot;&quot;] &lt;- &quot;There is no clear statement that the article reports a replication study (or studies)&quot;
