@@ -18,20 +18,20 @@
 ## Set-up & preprocessing--------------------------------------------------------
 
 # libraries
-library(rstudioapi)
+# library(rstudioapi)
 library(tidyverse)
 library(ids)
 
 # getting the path of your current open file
-current_path <- rstudioapi::getActiveDocumentContext()$path 
-setwd(dirname(current_path))
-setwd("../../data/01_scopus-selection")
+# current_path <- rstudioapi::getActiveDocumentContext()$path 
+# setwd(dirname(current_path))
+# setwd("../../data/01_scopus-selection")
 
 # load in data
-df2008 <- tibble(read.csv("scopus_2008.csv"))
-df2009 <- tibble(read.csv("scopus_2009.csv"))
-df2018 <- tibble(read.csv("scopus_2018.csv"))
-df2019 <- tibble(read.csv("scopus_2019.csv"))
+df2008 <- tibble(read.csv("../../data/01_scopus-selection/scopus_2008.csv"))
+df2009 <- tibble(read.csv("../../data/01_scopus-selection/scopus_2009.csv"))
+df2018 <- tibble(read.csv("../../data/01_scopus-selection/scopus_2018.csv"))
+df2019 <- tibble(read.csv("../../data/01_scopus-selection/scopus_2019.csv"))
 
 # load in journal data from scopus
 codes <- tibble(read.csv("../../data/01_scopus-selection/scopus-journal-list-download/Scopus Sources October 2020-Table 1.csv"))
