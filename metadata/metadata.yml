@@ -1,0 +1,22 @@
+metadata_version: 1
+name: Transparency in Linguistics
+description: The project aims to at estimate the prevalence of transparent research
+  practices in the field of linguistics before and after what has been referred to
+  as the replication crisis.
+tags:
+- transparency
+- open science
+- linguistics
+authors:
+- name: '      Agata Bochynska'
+- name: Timo B. Roettger
+- name: Erin M. Buchanan
+- name: Joseph V. Casillas
+- name: Caitlin Halfacre
+- name: ' Liam Keeble'
+- name: Melanie Röthlisberger
+- name: Irys-Amélie Champagne
+- name: Kaidi Chen
+corresponding_contributor:
+  name: Agata Bochynska
+  email: agata.bochynska@gmail.com
