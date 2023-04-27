@@ -156,7 +156,7 @@ bar_languages <-
                 y = pos,
                 label = paste0(prop, "%")),
             color = c("white", "white", "black", "black", "white", "white")) + 
-  labs(title = "B: Languages Sampled",
+  labs(title = "B: Languages",
        x = "",
        y = "") + 
   scale_x_discrete(limits = c("Pre-RC", "Post-RC")) +
