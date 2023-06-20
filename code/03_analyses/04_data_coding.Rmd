@@ -7,6 +7,8 @@ output:
     toc: true
     toc_float: true
     toc_depth: 3
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -301,6 +303,22 @@ DF$Agree <- DF$ArticleID %in% c(not_double, agree_list)
 # did we meet our goal of at least 250? 
 table(DF$ArticleIssues[DF$Agree], 
       DF$year_split[DF$Agree], useNA = "ifany")
+```
+
+## Testing Why Other Issues
+
+```{r}
+temp <- DF %>% 
+  filter(Agree == FALSE) %>% 
+  filter(ArticleIssues == "There are no issues")
+
+nrow(temp) # 9 that matches article
+
+temp2 <- DF_Second_match %>% 
+  filter(ArticleID %in% temp$ArticleID) %>% 
+  filter(name == "ArticleIssues")
+
+temp2
 ```
 
 ## Merge Partial/Unclear Answers

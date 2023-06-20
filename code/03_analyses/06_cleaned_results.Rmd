@@ -3,6 +3,8 @@ title: "Cleaned Results"
 author: "Erin M. Buchanan"
 date: "Last Knitted: `r Sys.Date()`"
 output: html_document
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -46,11 +48,15 @@ DF$ArticleIssues <- gsub("Article published in 2011|Article published in 2014|Ar
 # figure out how excluded
 reasons_excluded <- table(DF$ArticleIssues, DF$Agree)
 
+# update this table based on 04_data_coding
+reasons_excluded[1,1] <- reasons_excluded[1,1] + reasons_excluded[4,1]
+reasons_excluded[4,1] <- 0
+
 # total exclude 
 total_excluded <- sum(reasons_excluded[ , 1]) + sum(reasons_excluded[1:3, 2])
 ```
 
-Sample characteristics for all `r sample_size` articles are displayed in Table 2 and Figure 1. `r total_excluded` (`r round(total_excluded/sample_size*100, 1)`%) Articles were excluded due to not being in English (`r round(sum(reasons_excluded[2, ])/sample_size*100, 1)`%), not being about language according to our definition above (`r round(sum(reasons_excluded[1, ])/sample_size*100, 1)`%), not being accessible (`r round(sum(reasons_excluded[3, ])/sample_size*100, 1)`%) or other reasons (`r round(reasons_excluded[4, 1]/sample_size*100, 1)`%).
+Sample characteristics for all `r sample_size` articles are displayed in Table 2 and Figure 1. `r total_excluded` (`r round(total_excluded/sample_size*100, 1)`%) Articles were excluded due to not being in English (`r round(sum(reasons_excluded[2, ])/sample_size*100, 1)`%), not being about language according to our definition above (`r round(sum(reasons_excluded[1, ])/sample_size*100, 1)`%), or for not being accessible (`r round(sum(reasons_excluded[3, ])/sample_size*100, 1)`%).
 
 ```{r code-language}
 # lower case to normalize
