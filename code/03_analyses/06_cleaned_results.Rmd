@@ -735,7 +735,7 @@ fig2_data2 <- fig2_data %>%
             levels = c("Materials ", "Raw Data ", "Processed Data ", "Analysis "))
        )
 
-levels(fig2_data2$year_split) <- c("Pre-RC (2008-09)", "Post-RC (2018-2019)")
+levels(fig2_data2$year_split) <- c("Pre-RC (2008/2009)", "Post-RC (2018/2019)")
 
 fig2_data_label <- fig2_data2 %>%
   mutate(label = paste0(round(prop,0), "% ", "(n = ", n, ")"),
@@ -825,7 +825,7 @@ fig2_data2 <- fig2_data %>%
             levels = c("Materials ", "Raw Data ", "Processed Data ", "Analysis "))
        )
 
-levels(fig2_data2$year_split) <- c("Pre-RC (2008-09)", "Post-RC (2018-2019)")
+levels(fig2_data2$year_split) <- c("Pre-RC (2008/2009)", "Post-RC (2018/2019)")
 
 fig2_data_label <- fig2_data2 %>%
   mutate(label = paste0(round(prop,0), "% ", "(n = ", n, ")"),
